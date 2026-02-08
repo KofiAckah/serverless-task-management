@@ -1,5 +1,6 @@
 *.tfvars
 assignment.pdf
+
 # Local .terraform directories
 **/.terraform/*
 
@@ -14,6 +15,8 @@ crash.*.log
 # Exclude all .tfvars files, which are likely to contain sensitive data
 *.tfvars
 *.tfvars.json
+# !dev.tfvars
+
 
 # Ignore override files as they are usually used to override resources locally
 override.tf
