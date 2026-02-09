@@ -54,3 +54,9 @@ variable "stream_view_type" {
     error_message = "Invalid stream view type"
   }
 }
+
+variable "enable_ttl" {
+  description = "Enable TTL for automatic deletion of old tasks"
+  type        = bool
+  default     = false  # Disable for now, enable in production
+}

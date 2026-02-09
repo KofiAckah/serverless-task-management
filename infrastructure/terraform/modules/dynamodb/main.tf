@@ -3,6 +3,17 @@ resource "aws_dynamodb_table" "tasks" {
   billing_mode = var.billing_mode
   hash_key     = "taskId"
 
+  # Full schema (non-key attributes added dynamically):
+  # - taskId (S) - Primary key
+  # - title (S) - Task title
+  # - description (S) - Task description
+  # - status (S) - Task status (OPEN, IN_PROGRESS, COMPLETED, CLOSED)
+  # - priority (S) - Task priority (LOW, MEDIUM, HIGH)
+  # - createdBy (S) - User ID of creator (admin)
+  # - createdAt (N) - Unix timestamp
+  # - updatedAt (N) - Unix timestamp
+  # - dueDate (N) - Unix timestamp (optional)
+
   attribute {
     name = "taskId"
     type = "S"
@@ -46,6 +57,15 @@ resource "aws_dynamodb_table" "assignments" {
   name         = "${var.project_name}-${var.environment}-assignments"
   billing_mode = var.billing_mode
   hash_key     = "assignmentId"
+
+    # Full schema (non-key attributes added dynamically):
+  # - assignmentId (S) - Primary key (composite: taskId#userId)
+  # - taskId (S) - Foreign key to tasks table
+  # - userId (S) - Cognito user sub
+  # - userEmail (S) - User email for notifications
+  # - assignedBy (S) - User ID of admin who assigned
+  # - assignedAt (N) - Unix timestamp
+  # - status (S) - Assignment status (ASSIGNED, ACCEPTED, COMPLETED)
 
   attribute {
     name = "assignmentId"

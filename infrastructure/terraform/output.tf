@@ -13,22 +13,37 @@ output "cognito_user_pool_arn" {
   value       = module.cognito.user_pool_arn
 }
 
-output "tasks_table_name" {
+output "cognito_user_pool_endpoint" {
+  description = "Endpoint of the Cognito User Pool"
+  value       = module.cognito.user_pool_endpoint
+}
+
+output "dynamodb_tasks_table_name" {
   description = "Name of the tasks DynamoDB table"
   value       = module.dynamodb.tasks_table_name
 }
 
-output "tasks_table_arn" {
+output "dynamodb_tasks_table_arn" {
   description = "ARN of the tasks DynamoDB table"
   value       = module.dynamodb.tasks_table_arn
 }
 
-output "assignments_table_name" {
+output "dynamodb_assignments_table_name" {
   description = "Name of the assignments DynamoDB table"
   value       = module.dynamodb.assignments_table_name
 }
 
-output "assignments_table_arn" {
+output "dynamodb_assignments_table_arn" {
   description = "ARN of the assignments DynamoDB table"
   value       = module.dynamodb.assignments_table_arn
+}
+
+output "ses_sender_email_arn" {
+  description = "ARN of the SES sender email identity"
+  value       = module.ses.sender_email_arn
+}
+
+output "ses_sender_email" {
+  description = "Verified SES sender email address"
+  value       = module.ses.sender_email
 }
