@@ -5,4 +5,15 @@ module "cognito" {
   environment           = var.environment
   allowed_email_domains = var.allowed_email_domains
   tags                  = var.tags
+  # TODO: Uncomment when Lambda module is ready
+  # pre_signup_lambda_arn = module.lambda.pre_signup_function_arn
+}
+
+module "dynamodb" {
+  source = "./modules/dynamodb"
+
+  project_name = var.project_name
+  environment  = var.environment
+  billing_mode = var.dynamodb_billing_mode
+  tags         = var.tags
 }
