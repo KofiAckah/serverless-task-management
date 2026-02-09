@@ -1,3 +1,4 @@
+const { unmarshall } = require('@aws-sdk/util-dynamodb');
 const { getItem, queryItems } = require('../utils/dynamodb');
 const { sendTaskAssignmentEmail, sendTaskStatusUpdateEmail } = require('../utils/ses');
 
@@ -112,20 +113,4 @@ async function handleTaskEvent(record) {
   }
 }
 
-/**
- * Helper function to unmarshall DynamoDB item
- */
-function unmarshall(item) {
-  const result = {};
-  
-  for (const [key, value] of Object.entries(item)) {
-    if (value.S !== undefined) result[key] = value.S;
-    else if (value.N !== undefined) result[key] = Number(value.N);
-    else if (value.BOOL !== undefined) result[key] = value.BOOL;
-    else if (value.NULL !== undefined) result[key] = null;
-    else if (value.L !== undefined) result[key] = value.L.map(unmarshall);
-    else if (value.M !== undefined) result[key] = unmarshall(value.M);
-  }
-  
-  return result;
-}
+// Note: unmarshall is now imported from @aws-sdk/util-dynamodb at the top

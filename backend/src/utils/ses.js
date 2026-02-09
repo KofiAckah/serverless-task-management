@@ -90,7 +90,7 @@ async function sendTaskStatusUpdateEmail(recipientEmail, recipientName, task, ol
 /**
  * Send task completion notification to admin
  */
-async function sendTaskCompletionEmail(recipientEmail, task, completedBy) {
+async function sendTaskCompletionEmail(recipientEmail, recipientName, task, assignedUsersCount) {
   const params = {
     Source: SENDER_EMAIL,
     Destination: {
@@ -98,21 +98,24 @@ async function sendTaskCompletionEmail(recipientEmail, task, completedBy) {
     },
     Message: {
       Subject: {
-        Data: `Task Completed: ${task.title}`
+        Data: `Task Closed: ${task.title}`
       },
       Body: {
         Html: {
           Data: `
             <html>
               <body style="font-family: Arial, sans-serif;">
-                <h2>Task Completed</h2>
-                <p>A task has been marked as completed:</p>
+                <h2 style="color: #2e7d32;">✅ Task Closed</h2>
+                <p>Hello ${recipientName},</p>
+                <p>The following task has been closed:</p>
                 <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
                   <h3>${task.title}</h3>
                   <p><strong>Description:</strong> ${task.description || 'No description'}</p>
                   <p><strong>Priority:</strong> ${task.priority}</p>
-                  <p><strong>Completed By:</strong> ${completedBy}</p>
-                  <p><strong>Completion Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  <p><strong>Status:</strong> <span style="color: #2e7d32;">CLOSED</span></p>
+                  <p><strong>Assigned Users:</strong> ${assignedUsersCount}</p>
+                  ${task.closedAt ? `<p><strong>Closed At:</strong> ${new Date(task.closedAt).toLocaleString()}</p>` : ''}
+                  ${task.closureNotes ? `<p><strong>Closure Notes:</strong> ${task.closureNotes}</p>` : ''}
                 </div>
                 <p>Best regards,<br/>Task Management System</p>
               </body>
