@@ -53,7 +53,8 @@ module "lambda" {
   ses_policy_arn = module.ses.ses_send_email_policy_arn
 
   # Cognito configuration
-  cognito_user_pool_id = module.cognito.user_pool_id
+  cognito_user_pool_id  = module.cognito.user_pool_id
+  cognito_user_pool_arn = module.cognito.user_pool_arn
 }
 
 module "api_gateway" {

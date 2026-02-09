@@ -39,13 +39,13 @@ exports.handler = async (event) => {
     const queryParams = event.queryStringParameters || {};
     const { status } = queryParams;
     
-    // Query assignments for this user
+    // Query assignments for this user using assignee-index GSI
     const userAssignments = await queryItems(
       ASSIGNMENTS_TABLE,
-      '#userId = :userIdValue',
-      { '#userId': 'userId' },
-      { ':userIdValue': user.userId },
-      'UserIndex'
+      '#assigneeId = :assigneeIdValue',
+      { '#assigneeId': 'assigneeId' },
+      { ':assigneeIdValue': user.userId },
+      'assignee-index'
     );
     
     if (!userAssignments || userAssignments.length === 0) {

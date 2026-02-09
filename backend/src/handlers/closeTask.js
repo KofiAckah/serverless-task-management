@@ -101,24 +101,23 @@ exports.handler = async (event) => {
     
     console.log('Task closed successfully:', taskId);
     
-    // Get all assignments for this task
+    // Get all assignments for this task using task-index GSI
     const assignments = await queryItems(
       ASSIGNMENTS_TABLE,
       '#taskId = :taskIdValue',
       { '#taskId': 'taskId' },
       { ':taskIdValue': taskId },
-      'TaskIndex'
+      'task-index'
     );
     
-    // Send completion notification to admin
+    // Send completion notification to admin (using adminId for Cognito lookup)
     try {
       await sendTaskCompletionEmail(
-        user.email,
-        user.email.split('@')[0],
+        user.userId,
         closedTask,
         assignments.length
       );
-      console.log('Task completion email sent to admin:', user.email);
+      console.log('Task completion email sent to admin:', user.userId);
     } catch (emailError) {
       console.error('Failed to send completion email:', emailError);
       // Don't fail the request if email fails

@@ -112,6 +112,26 @@ resource "aws_iam_role" "tasks" {
   tags = var.tags
 }
 
+# Tasks Lambda Cognito Policy
+resource "aws_iam_role_policy" "tasks_cognito" {
+  name = "${var.project_name}-${var.environment}-lambda-cognito"
+  role = aws_iam_role.tasks.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers"
+        ]
+        Resource = var.cognito_user_pool_arn
+      }
+    ]
+  })
+}
+
 # Tasks Lambda DynamoDB Policy
 resource "aws_iam_role_policy" "tasks_dynamodb" {
   name = "${var.project_name}-${var.environment}-tasks-dynamodb-policy"
@@ -189,6 +209,7 @@ resource "aws_lambda_function" "tasks" {
       TASKS_TABLE                         = var.tasks_table_name
       ASSIGNMENTS_TABLE                   = var.assignments_table_name
       ENVIRONMENT                         = var.environment
+      COGNITO_USER_POOL_ID                = var.cognito_user_pool_id
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
   }
@@ -198,7 +219,8 @@ resource "aws_lambda_function" "tasks" {
   depends_on = [
     aws_cloudwatch_log_group.tasks,
     aws_iam_role_policy_attachment.tasks_basic,
-    aws_iam_role_policy.tasks_dynamodb
+    aws_iam_role_policy.tasks_dynamodb,
+    aws_iam_role_policy.tasks_cognito
   ]
 }
 
@@ -234,6 +256,26 @@ resource "aws_iam_role_policy_attachment" "notifications_basic" {
 resource "aws_iam_role_policy_attachment" "notifications_ses" {
   role       = aws_iam_role.notifications.name
   policy_arn = var.ses_policy_arn
+}
+
+# Notifications Lambda Cognito Policy
+resource "aws_iam_role_policy" "notifications_cognito" {
+  name = "${var.project_name}-${var.environment}-notifications-cognito"
+  role = aws_iam_role.notifications.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:ListUsers"
+        ]
+        Resource = var.cognito_user_pool_arn
+      }
+    ]
+  })
 }
 
 # DynamoDB Stream read policy for notifications
@@ -316,6 +358,7 @@ resource "aws_lambda_function" "notifications" {
       TASKS_TABLE                         = var.tasks_table_name
       ASSIGNMENTS_TABLE                   = var.assignments_table_name
       ENVIRONMENT                         = var.environment
+      COGNITO_USER_POOL_ID                = var.cognito_user_pool_id
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
   }
@@ -326,7 +369,8 @@ resource "aws_lambda_function" "notifications" {
     aws_cloudwatch_log_group.notifications,
     aws_iam_role_policy_attachment.notifications_basic,
     aws_iam_role_policy_attachment.notifications_ses,
-    aws_iam_role_policy.notifications_streams
+    aws_iam_role_policy.notifications_streams,
+    aws_iam_role_policy.notifications_cognito
   ]
 }
 

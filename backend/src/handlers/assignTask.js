@@ -21,15 +21,15 @@ exports.handler = async (event) => {
     
     // Parse request body
     const body = JSON.parse(event.body);
-    const { taskId, userId, userEmail } = body;
+    const { taskId, assigneeId } = body;
     
     // Validate required fields
-    if (!taskId || !userId || !userEmail) {
+    if (!taskId || !assigneeId) {
       return {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         headers: CORS_HEADERS,
         body: JSON.stringify({ 
-          error: 'taskId, userId, and userEmail are required' 
+          error: 'taskId and assigneeId are required' 
         })
       };
     }
@@ -46,14 +46,13 @@ exports.handler = async (event) => {
     }
     
     // Create assignment
-    const assignmentId = `${taskId}#${userId}`;
+    const assignmentId = `${taskId}#${assigneeId}`;
     const now = Date.now();
     
     const assignment = {
       assignmentId,
       taskId,
-      userId,
-      userEmail,
+      assigneeId,
       assignedBy: user.userId,
       assignedByEmail: user.email,
       assignedAt: now,

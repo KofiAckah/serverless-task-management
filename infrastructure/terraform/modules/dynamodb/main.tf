@@ -59,10 +59,9 @@ resource "aws_dynamodb_table" "assignments" {
   hash_key     = "assignmentId"
 
   # Full schema (non-key attributes added dynamically):
-  # - assignmentId (S) - Primary key (composite: taskId#userId)
+  # - assignmentId (S) - Primary key (composite: taskId#assigneeId)
   # - taskId (S) - Foreign key to tasks table
-  # - userId (S) - Cognito user sub
-  # - userEmail (S) - User email for notifications
+  # - assigneeId (S) - Cognito user sub (ID of user assigned to task)
   # - assignedBy (S) - User ID of admin who assigned
   # - assignedAt (N) - Unix timestamp
   # - status (S) - Assignment status (ASSIGNED, ACCEPTED, COMPLETED)
@@ -78,20 +77,19 @@ resource "aws_dynamodb_table" "assignments" {
   }
 
   attribute {
-    name = "userId"
+    name = "assigneeId"
     type = "S"
   }
 
   global_secondary_index {
-    name            = "TaskIndex"
+    name            = "task-index"
     hash_key        = "taskId"
     projection_type = "ALL"
   }
 
   global_secondary_index {
-    name            = "UserIndex"
-    hash_key        = "userId"
-    range_key       = "taskId"
+    name            = "assignee-index"
+    hash_key        = "assigneeId"
     projection_type = "ALL"
   }
 

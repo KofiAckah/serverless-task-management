@@ -76,10 +76,10 @@ exports.handler = async (event) => {
     if (!isAdmin(user) && !taskId) {
       const userAssignments = await queryItems(
         ASSIGNMENTS_TABLE,
-        '#userId = :userIdValue',
-        { '#userId': 'userId' },
-        { ':userIdValue': user.userId },
-        'UserIndex'
+        '#assigneeId = :assigneeIdValue',
+        { '#assigneeId': 'assigneeId' },
+        { ':assigneeIdValue': user.userId },
+        'assignee-index'
       );
       
       const assignedTaskIds = userAssignments.map(a => a.taskId);

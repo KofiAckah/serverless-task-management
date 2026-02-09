@@ -54,15 +54,15 @@ async function handleAssignmentEvent(record) {
       return;
     }
     
-    // Send assignment notification email
+    // Send assignment notification email using assigneeId
     try {
+      // assigneeId is the Cognito user sub, email will be looked up from Cognito
       await sendTaskAssignmentEmail(
-        newAssignment.userEmail,
-        newAssignment.userEmail.split('@')[0], // Use email prefix as name
+        newAssignment.assigneeId,
         task,
-        newAssignment.assignedByEmail
+        newAssignment.assignedByEmail || 'System'
       );
-      console.log('Assignment email sent to:', newAssignment.userEmail);
+      console.log('Assignment email sent for assignee:', newAssignment.assigneeId);
     } catch (emailError) {
       console.error('Failed to send assignment email:', emailError);
     }
@@ -85,29 +85,34 @@ async function handleTaskEvent(record) {
         newStatus: newTask.status
       });
       
-      // Get all assignments for this task
+      // Get all assignments for this task using the new task-index GSI
       const assignments = await queryItems(
         ASSIGNMENTS_TABLE,
         '#taskId = :taskIdValue',
         { '#taskId': 'taskId' },
         { ':taskIdValue': newTask.taskId },
-        'TaskIndex'
+        'task-index'
       );
       
-      // Send status update email to all assigned users
-      for (const assignment of assignments) {
-        try {
-          await sendTaskStatusUpdateEmail(
-            assignment.userEmail,
-            assignment.userEmail.split('@')[0],
-            newTask,
-            oldTask.status,
-            newTask.status
-          );
-          console.log('Status update email sent to:', assignment.userEmail);
-        } catch (emailError) {
-          console.error('Failed to send status update email:', emailError);
-        }
+      // Extract assigneeIds from all assignments
+      const assigneeIds = assignments.map(assignment => assignment.assigneeId);
+      
+      if (assigneeIds.length === 0) {
+        console.log('No assignees found for task:', newTask.taskId);
+        return;
+      }
+      
+      // Send status update email to all assignees + all admins (done in SES utility)
+      try {
+        await sendTaskStatusUpdateEmail(
+          assigneeIds,
+          newTask,
+          oldTask.status,
+          newTask.status
+        );
+        console.log(`Status update email sent for ${assigneeIds.length} assignees`);
+      } catch (emailError) {
+        console.error('Failed to send status update email:', emailError);
       }
     }
   }
