@@ -82,3 +82,19 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "enable_streams" {
+  description = "Enable DynamoDB streams for change data capture"
+  type        = bool
+  default     = true
+}
+
+variable "stream_view_type" {
+  description = "Stream view type (NEW_IMAGE, OLD_IMAGE, NEW_AND_OLD_IMAGES, KEYS_ONLY)"
+  type        = string
+  default     = "NEW_AND_OLD_IMAGES"
+  validation {
+    condition     = contains(["NEW_IMAGE", "OLD_IMAGE", "NEW_AND_OLD_IMAGES", "KEYS_ONLY"], var.stream_view_type)
+    error_message = "Invalid stream view type"
+  }
+}

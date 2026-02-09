@@ -42,12 +42,12 @@ resource "aws_cognito_user_pool_client" "main" {
 
   explicit_auth_flows = var.explicit_auth_flows
 
-  generate_secret                      = false
-  prevent_user_existence_errors        = "ENABLED"
-  enable_token_revocation              = true
-  refresh_token_validity               = var.refresh_token_validity
-  access_token_validity                = var.access_token_validity
-  id_token_validity                    = var.id_token_validity
+  generate_secret               = false
+  prevent_user_existence_errors = "ENABLED"
+  enable_token_revocation       = true
+  refresh_token_validity        = var.refresh_token_validity
+  access_token_validity         = var.access_token_validity
+  id_token_validity             = var.id_token_validity
 
   token_validity_units {
     refresh_token = "days"
