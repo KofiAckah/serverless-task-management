@@ -47,3 +47,19 @@ output "ses_sender_email" {
   description = "Verified SES sender email address"
   value       = module.ses.verified_email
 }
+
+# API Gateway Outputs
+output "api_gateway_url" {
+  description = "Base URL of the API Gateway"
+  value       = module.api_gateway.api_endpoint
+}
+
+output "api_gateway_id" {
+  description = "ID of the API Gateway REST API"
+  value       = module.api_gateway.api_id
+}
+
+output "api_endpoints" {
+  description = "All API endpoints"
+  value       = module.api_gateway.api_endpoints
+}

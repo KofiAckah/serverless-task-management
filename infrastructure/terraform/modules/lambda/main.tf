@@ -173,12 +173,12 @@ data "archive_file" "tasks" {
 }
 
 # Tasks Lambda Function
-# Note: Default handler is createTask, but API Gateway will route to different handlers
+# Note: Uses router.js to dispatch API Gateway requests to appropriate handlers
 resource "aws_lambda_function" "tasks" {
   filename         = data.archive_file.tasks.output_path
   function_name    = "${var.project_name}-${var.environment}-tasks"
   role             = aws_iam_role.tasks.arn
-  handler          = "src/handlers/createTask.handler"
+  handler          = "src/router.handler"
   source_code_hash = data.archive_file.tasks.output_base64sha256
   runtime          = var.runtime
   timeout          = var.timeout
