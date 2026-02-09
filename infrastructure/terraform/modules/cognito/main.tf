@@ -18,12 +18,27 @@ resource "aws_cognito_user_pool" "main" {
     attribute_data_type = "String"
     required            = true
     mutable             = false
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 2048
+    }
   }
 
   schema {
     name                = "role"
     attribute_data_type = "String"
     mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 256
+    }
+  }
+
+  # Prevent destruction of user pool due to schema changes
+  lifecycle {
+    ignore_changes = [schema]
   }
 
   account_recovery_setting {

@@ -12,16 +12,21 @@ module "cognito" {
 module "dynamodb" {
   source = "./modules/dynamodb"
 
-  project_name = var.project_name
-  environment  = var.environment
-  billing_mode = var.dynamodb_billing_mode
-  tags         = var.tags
+  project_name     = var.project_name
+  environment      = var.environment
+  billing_mode     = var.dynamodb_billing_mode
+  enable_streams   = var.enable_streams
+  stream_view_type = var.stream_view_type
+  tags             = var.tags
 }
 
 module "ses" {
   source = "./modules/ses"
 
-  sender_email = var.sender_email
-  tags         = var.tags
+  project_name          = var.project_name
+  environment           = var.environment
+  sender_email          = var.sender_email
+  allowed_email_domains = var.allowed_email_domains
+  tags                  = var.tags
 }
 

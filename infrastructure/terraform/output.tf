@@ -40,10 +40,10 @@ output "dynamodb_assignments_table_arn" {
 
 output "ses_sender_email_arn" {
   description = "ARN of the SES sender email identity"
-  value       = module.ses.sender_email_arn
+  value       = module.ses.ses_identity_arn
 }
 
 output "ses_sender_email" {
   description = "Verified SES sender email address"
-  value       = module.ses.sender_email
+  value       = module.ses.verified_email
 }

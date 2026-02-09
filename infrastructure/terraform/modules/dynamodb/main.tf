@@ -58,7 +58,7 @@ resource "aws_dynamodb_table" "assignments" {
   billing_mode = var.billing_mode
   hash_key     = "assignmentId"
 
-    # Full schema (non-key attributes added dynamically):
+  # Full schema (non-key attributes added dynamically):
   # - assignmentId (S) - Primary key (composite: taskId#userId)
   # - taskId (S) - Foreign key to tasks table
   # - userId (S) - Cognito user sub
