@@ -13,6 +13,12 @@ variable "allowed_email_domains" {
   type        = list(string)
 }
 
+variable "pre_signup_lambda_arn" {
+  description = "ARN of the pre-signup Lambda function"
+  type        = string
+  default     = null
+}
+
 variable "tags" {
   description = "Common tags for resources"
   type        = map(string)

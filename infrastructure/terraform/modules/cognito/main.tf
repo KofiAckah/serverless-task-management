@@ -41,6 +41,15 @@ resource "aws_cognito_user_pool" "main" {
     ignore_changes = [schema]
   }
 
+  # Lambda Triggers
+  dynamic "lambda_config" {
+    for_each = var.pre_signup_lambda_arn != null ? [1] : []
+
+    content {
+      pre_sign_up = var.pre_signup_lambda_arn
+    }
+  }
+
   account_recovery_setting {
     recovery_mechanism {
       name     = "verified_email"
