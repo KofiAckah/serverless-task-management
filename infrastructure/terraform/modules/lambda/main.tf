@@ -38,27 +38,21 @@ resource "aws_cloudwatch_log_group" "pre_signup" {
   tags = var.tags
 }
 
-# Archive placeholder for pre-signup Lambda
+# Archive backend code for pre-signup Lambda
 data "archive_file" "pre_signup" {
   type        = "zip"
   output_path = "${path.module}/../../.terraform/lambda/pre-signup.zip"
-
-  source {
-    content  = <<-EOT
-      exports.handler = async (event) => {
-        const allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS.split(',');
-        const email = event.request.userAttributes.email;
-        const domain = email.split('@')[1];
-        
-        if (!allowedDomains.includes(domain)) {
-          throw new Error('Email domain ' + domain + ' is not allowed');
-        }
-        
-        return event;
-      };
-    EOT
-    filename = "index.js"
-  }
+  source_dir  = "${path.module}/../../../../backend"
+  excludes = [
+    ".git",
+    ".gitignore",
+    "README.md",
+    "test-events",
+    "test-local.js",
+    "quick-start.sh",
+    "deploy.sh",
+    "*.md"
+  ]
 }
 
 # Pre-Signup Lambda Function
@@ -66,7 +60,7 @@ resource "aws_lambda_function" "pre_signup" {
   filename         = data.archive_file.pre_signup.output_path
   function_name    = "${var.project_name}-${var.environment}-pre-signup"
   role             = aws_iam_role.pre_signup.arn
-  handler          = "index.handler"
+  handler          = "src/handlers/preSignup.handler"
   source_code_hash = data.archive_file.pre_signup.output_base64sha256
   runtime          = var.runtime
   timeout          = 10
@@ -161,37 +155,30 @@ resource "aws_cloudwatch_log_group" "tasks" {
   tags = var.tags
 }
 
-# Archive placeholder for tasks Lambda
+# Archive backend code for tasks Lambda
 data "archive_file" "tasks" {
   type        = "zip"
   output_path = "${path.module}/../../.terraform/lambda/tasks.zip"
-
-  source {
-    content  = <<-EOT
-      exports.handler = async (event) => {
-        return {
-          statusCode: 200,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          },
-          body: JSON.stringify({
-            message: 'Tasks Lambda placeholder - Replace with actual implementation',
-            event: event
-          })
-        };
-      };
-    EOT
-    filename = "index.js"
-  }
+  source_dir  = "${path.module}/../../../../backend"
+  excludes = [
+    ".git",
+    ".gitignore",
+    "README.md",
+    "test-events",
+    "test-local.js",
+    "quick-start.sh",
+    "deploy.sh",
+    "*.md"
+  ]
 }
 
 # Tasks Lambda Function
+# Note: Default handler is createTask, but API Gateway will route to different handlers
 resource "aws_lambda_function" "tasks" {
   filename         = data.archive_file.tasks.output_path
   function_name    = "${var.project_name}-${var.environment}-tasks"
   role             = aws_iam_role.tasks.arn
-  handler          = "index.handler"
+  handler          = "src/handlers/createTask.handler"
   source_code_hash = data.archive_file.tasks.output_base64sha256
   runtime          = var.runtime
   timeout          = var.timeout
@@ -295,37 +282,21 @@ resource "aws_cloudwatch_log_group" "notifications" {
   tags = var.tags
 }
 
-# Archive placeholder for notifications Lambda
+# Archive backend code for notifications Lambda
 data "archive_file" "notifications" {
   type        = "zip"
   output_path = "${path.module}/../../.terraform/lambda/notifications.zip"
-
-  source {
-    content  = <<-EOT
-      const AWS = require('aws-sdk');
-      const ses = new AWS.SES();
-      
-      exports.handler = async (event) => {
-        console.log('Processing DynamoDB Stream records:', JSON.stringify(event, null, 2));
-        
-        for (const record of event.Records) {
-          if (record.eventName === 'INSERT' || record.eventName === 'MODIFY') {
-            const newImage = record.dynamodb.NewImage;
-            console.log('New/Modified record:', JSON.stringify(newImage, null, 2));
-            
-            // Placeholder for email notification logic
-            // In production, parse the record and send appropriate emails via SES
-          }
-        }
-        
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ message: 'Notifications processed' })
-        };
-      };
-    EOT
-    filename = "index.js"
-  }
+  source_dir  = "${path.module}/../../../../backend"
+  excludes = [
+    ".git",
+    ".gitignore",
+    "README.md",
+    "test-events",
+    "test-local.js",
+    "quick-start.sh",
+    "deploy.sh",
+    "*.md"
+  ]
 }
 
 # Notifications Lambda Function
@@ -333,7 +304,7 @@ resource "aws_lambda_function" "notifications" {
   filename         = data.archive_file.notifications.output_path
   function_name    = "${var.project_name}-${var.environment}-notifications"
   role             = aws_iam_role.notifications.arn
-  handler          = "index.handler"
+  handler          = "src/handlers/notifications.handler"
   source_code_hash = data.archive_file.notifications.output_base64sha256
   runtime          = var.runtime
   timeout          = var.timeout

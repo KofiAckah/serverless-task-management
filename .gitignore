@@ -1,5 +1,6 @@
 *.tfvars
 assignment.pdf
+node_modules/
 
 # Local .terraform directories
 **/.terraform/*

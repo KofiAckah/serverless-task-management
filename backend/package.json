@@ -1,0 +1,18 @@
+{
+  "name": "task-management-backend",
+  "version": "1.0.0",
+  "description": "Serverless Task Management Backend - Lambda Functions",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["lambda", "aws", "serverless", "task-management"],
+  "author": "AmaliTech",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.550.0",
+    "@aws-sdk/lib-dynamodb": "^3.550.0",
+    "@aws-sdk/client-ses": "^3.550.0",
+    "uuid": "^9.0.1"
+  }
+}
