@@ -129,7 +129,7 @@ resource "aws_api_gateway_integration_response" "tasks_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -209,7 +209,7 @@ resource "aws_api_gateway_integration_response" "tasks_assigned_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -289,7 +289,7 @@ resource "aws_api_gateway_integration_response" "task_by_id_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'PUT,POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -369,7 +369,7 @@ resource "aws_api_gateway_integration_response" "task_assign_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -449,7 +449,7 @@ resource "aws_api_gateway_integration_response" "task_close_options" {
 
   response_parameters = {
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,POST,PUT,DELETE,OPTIONS'"
     "method.response.header.Access-Control-Allow-Origin"  = "'*'"
   }
 
@@ -477,23 +477,52 @@ resource "aws_api_gateway_deployment" "main" {
 
   triggers = {
     redeployment = sha1(jsonencode([
+      # Resources
       aws_api_gateway_resource.tasks.id,
       aws_api_gateway_resource.tasks_assigned.id,
       aws_api_gateway_resource.task_by_id.id,
       aws_api_gateway_resource.task_assign.id,
       aws_api_gateway_resource.task_close.id,
+      # Authorizer
+      aws_api_gateway_authorizer.cognito.id,
+      # Main Methods
       aws_api_gateway_method.create_task.id,
       aws_api_gateway_method.get_tasks.id,
       aws_api_gateway_method.get_assigned_tasks.id,
       aws_api_gateway_method.update_task.id,
       aws_api_gateway_method.assign_task.id,
       aws_api_gateway_method.close_task.id,
+      # Main Integrations
       aws_api_gateway_integration.create_task.id,
       aws_api_gateway_integration.get_tasks.id,
       aws_api_gateway_integration.get_assigned_tasks.id,
       aws_api_gateway_integration.update_task.id,
       aws_api_gateway_integration.assign_task.id,
       aws_api_gateway_integration.close_task.id,
+      # OPTIONS Methods (CORS)
+      aws_api_gateway_method.tasks_options.id,
+      aws_api_gateway_method.tasks_assigned_options.id,
+      aws_api_gateway_method.task_by_id_options.id,
+      aws_api_gateway_method.task_assign_options.id,
+      aws_api_gateway_method.task_close_options.id,
+      # OPTIONS Integrations
+      aws_api_gateway_integration.tasks_options.id,
+      aws_api_gateway_integration.tasks_assigned_options.id,
+      aws_api_gateway_integration.task_by_id_options.id,
+      aws_api_gateway_integration.task_assign_options.id,
+      aws_api_gateway_integration.task_close_options.id,
+      # OPTIONS Method Responses
+      aws_api_gateway_method_response.tasks_options.id,
+      aws_api_gateway_method_response.tasks_assigned_options.id,
+      aws_api_gateway_method_response.task_by_id_options.id,
+      aws_api_gateway_method_response.task_assign_options.id,
+      aws_api_gateway_method_response.task_close_options.id,
+      # OPTIONS Integration Responses
+      aws_api_gateway_integration_response.tasks_options.id,
+      aws_api_gateway_integration_response.tasks_assigned_options.id,
+      aws_api_gateway_integration_response.task_by_id_options.id,
+      aws_api_gateway_integration_response.task_assign_options.id,
+      aws_api_gateway_integration_response.task_close_options.id,
     ]))
   }
 
