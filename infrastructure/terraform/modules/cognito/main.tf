@@ -1,48 +1,29 @@
-resource "aws_cognito_user_pool" "this" {
+resource "aws_cognito_user_pool" "main" {
   name = "${var.project_name}-${var.environment}-user-pool"
 
-  username_attributes      = ["email"]
-  auto_verified_attributes = ["email"]
+  username_attributes      = var.username_attributes
+  auto_verified_attributes = var.auto_verified_attributes
 
   password_policy {
-    minimum_length    = 8
-    require_lowercase = true
-    require_numbers   = true
-    require_symbols   = true
-    require_uppercase = true
-    temporary_password_validity_days = 7
-  }
-
-  verification_message_template {
-    default_email_option = "CONFIRM_WITH_CODE"
-    email_subject        = "Account Confirmation"
-    email_message        = "Your confirmation code is {####}"
+    minimum_length                   = var.password_minimum_length
+    require_lowercase                = var.password_require_lowercase
+    require_numbers                  = var.password_require_numbers
+    require_symbols                  = var.password_require_symbols
+    require_uppercase                = var.password_require_uppercase
+    temporary_password_validity_days = var.temporary_password_validity_days
   }
 
   schema {
-    attribute_data_type = "String"
-    developer_only_attribute = false
-    mutable             = true
     name                = "email"
+    attribute_data_type = "String"
     required            = true
-
-    string_attribute_constraints {
-      min_length = 0
-      max_length = 2048
-    }
+    mutable             = false
   }
 
   schema {
+    name                = "role"
     attribute_data_type = "String"
-    developer_only_attribute = false
     mutable             = true
-    name                = "name"
-    required            = true
-
-    string_attribute_constraints {
-      min_length = 0
-      max_length = 2048
-    }
   }
 
   account_recovery_setting {
@@ -52,42 +33,39 @@ resource "aws_cognito_user_pool" "this" {
     }
   }
 
-  admin_create_user_config {
-    allow_admin_create_user_only = false
-  }
-
-  # lambda_config {
-  #   pre_sign_up = var.pre_sign_up_lambda_arn
-  # }
-
   tags = var.tags
 }
 
-resource "aws_cognito_user_pool_client" "this" {
-  name = "${var.project_name}-${var.environment}-client"
+resource "aws_cognito_user_pool_client" "main" {
+  name         = "${var.project_name}-${var.environment}-client"
+  user_pool_id = aws_cognito_user_pool.main.id
 
-  user_pool_id = aws_cognito_user_pool.this.id
+  explicit_auth_flows = var.explicit_auth_flows
 
-  generate_secret     = false
-  explicit_auth_flows = [
-    "ALLOW_USER_SRP_AUTH",
-    "ALLOW_REFRESH_TOKEN_AUTH",
-    "ALLOW_USER_PASSWORD_AUTH"
-  ]
+  generate_secret                      = false
+  prevent_user_existence_errors        = "ENABLED"
+  enable_token_revocation              = true
+  refresh_token_validity               = var.refresh_token_validity
+  access_token_validity                = var.access_token_validity
+  id_token_validity                    = var.id_token_validity
 
-  prevent_user_existence_errors = "ENABLED"
+  token_validity_units {
+    refresh_token = "days"
+    access_token  = "hours"
+    id_token      = "hours"
+  }
 }
 
 resource "aws_cognito_user_group" "admin" {
-  name         = "Admin"
-  user_pool_id = aws_cognito_user_pool.this.id
-  description  = "Admin group"
+  name         = var.admin_group_name
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = var.admin_group_description
   precedence   = 1
 }
 
 resource "aws_cognito_user_group" "member" {
-  name         = "Member"
-  user_pool_id = aws_cognito_user_pool.this.id
-  description  = "Member group"
+  name         = var.member_group_name
+  user_pool_id = aws_cognito_user_pool.main.id
+  description  = var.member_group_description
   precedence   = 2
 }

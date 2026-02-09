@@ -5,7 +5,7 @@ output "cognito_user_pool_id" {
 
 output "cognito_user_pool_client_id" {
   description = "ID of the Cognito User Pool Client"
-  value       = module.cognito.user_pool_client_id
+  value       = module.cognito.client_id
 }
 
 output "cognito_user_pool_arn" {
