@@ -54,7 +54,7 @@ EOT
   enable_branch_auto_build = var.enable_auto_build
   enable_auto_branch_creation = false
 
-  platform = "WEB_COMPUTE"
+  platform = "WEB"
 
   tags = var.tags
 }

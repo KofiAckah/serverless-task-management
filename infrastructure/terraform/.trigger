@@ -1,0 +1,1 @@
+# Fix Amplify platform
