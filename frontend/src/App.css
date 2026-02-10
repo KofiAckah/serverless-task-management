@@ -1,0 +1,10 @@
+/* App Component Styles */
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.App {
+  min-height: 100vh;
+}
