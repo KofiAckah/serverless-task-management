@@ -37,15 +37,17 @@ frontend:
       - frontend/node_modules/**/*
 EOT
 
-  # SPA routing rules
+  # SPA routing rules - Order matters!
+  # Rule 1: Redirect all non-file paths to index.html
   custom_rule {
-    source = "/<*>"
+    source = "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|woff2|ttf|map|json|webp)$)([^.]+$)/>"
     status = "200"
     target = "/index.html"
   }
 
+  # Rule 2: Catch-all for client-side routes
   custom_rule {
-    source = "</^[^.]+$|\\.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf|map|json)$)([^.]+$)/>"
+    source = "/<*>"
     status = "200"
     target = "/index.html"
   }
