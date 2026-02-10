@@ -1,12 +1,15 @@
 const { getItem, updateItem } = require('../utils/dynamodb');
-const { getUserFromEvent, validateAdminRole } = require('../utils/auth');
+const { getUserFromEvent, isAdmin } = require('../utils/auth');
 const { TASK_STATUS, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
 
 const TASKS_TABLE = process.env.TASKS_TABLE;
+const ASSIGNMENTS_TABLE = process.env.ASSIGNMENTS_TABLE;
 
 /**
- * Update a task (Admin only)
- * Assignment requirement: Admins can update task details
+ * Update a task
+ * Assignment requirement: 
+ * - Admins can update all task details
+ * - Members can update task status for tasks assigned to them
  */
 exports.handler = async (event) => {
   console.log('Update Task Event:', JSON.stringify(event, null, 2));
@@ -15,8 +18,7 @@ exports.handler = async (event) => {
     // Get user from Cognito authorizer
     const user = getUserFromEvent(event);
     
-    // Validate admin role
-    validateAdminRole(user);
+    const userIsAdmin = isAdmin(user);
     
     // Get task ID from path
     const taskId = event.pathParameters?.taskId;
@@ -40,9 +42,48 @@ exports.handler = async (event) => {
       };
     }
     
+    // If member, check if task is assigned to them
+    if (!userIsAdmin) {
+      const assignmentId = `${taskId}#${user.userId}`;
+      const assignment = await getItem(ASSIGNMENTS_TABLE, { assignmentId });
+      
+      if (!assignment) {
+        return {
+          statusCode: HTTP_STATUS.FORBIDDEN,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ 
+            error: 'Access denied. You can only update tasks assigned to you.' 
+          })
+        };
+      }
+    }
+    
     // Parse request body
     const body = JSON.parse(event.body);
     const { title, description, status, priority, dueDate } = body;
+    
+    // Members can only update status
+    if (!userIsAdmin) {
+      if (title !== undefined || description !== undefined || priority !== undefined || dueDate !== undefined) {
+        return {
+          statusCode: HTTP_STATUS.FORBIDDEN,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ 
+            error: 'Members can only update task status. Other fields require admin privileges.' 
+          })
+        };
+      }
+      
+      if (status === undefined) {
+        return {
+          statusCode: HTTP_STATUS.BAD_REQUEST,
+          headers: CORS_HEADERS,
+          body: JSON.stringify({ 
+            error: 'Status field is required for member updates.' 
+          })
+        };
+      }
+    }
     
     // Build update expression
     const updateParts = [];
