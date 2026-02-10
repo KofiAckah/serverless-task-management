@@ -405,3 +405,180 @@ resource "aws_lambda_event_source_mapping" "assignments_stream" {
     }
   }
 }
+
+#=============================================================================
+# Auth Lambda Functions (API Gateway - No Authorization Required)
+#=============================================================================
+
+# IAM Role for Auth Lambda Functions
+resource "aws_iam_role" "auth" {
+  name = "${var.project_name}-${var.environment}-auth-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = var.tags
+}
+
+# Attach basic Lambda execution policy
+resource "aws_iam_role_policy_attachment" "auth_basic" {
+  role       = aws_iam_role.auth.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Auth Lambda Cognito Policy (for signup, login, confirm)
+resource "aws_iam_role_policy" "auth_cognito" {
+  name = "${var.project_name}-${var.environment}-auth-cognito"
+  role = aws_iam_role.auth.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:SignUp",
+          "cognito-idp:InitiateAuth",
+          "cognito-idp:ConfirmSignUp",
+          "cognito-idp:AdminAddUserToGroup",
+          "cognito-idp:AdminGetUser"
+        ]
+        Resource = var.cognito_user_pool_arn
+      }
+    ]
+  })
+}
+
+# CloudWatch Log Groups for Auth
+resource "aws_cloudwatch_log_group" "signup" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-signup"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_log_group" "login" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-login"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+resource "aws_cloudwatch_log_group" "confirm_signup" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-confirm-signup"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+# Archive backend code for auth Lambdas
+data "archive_file" "auth" {
+  type        = "zip"
+  output_path = "${path.module}/../../.terraform/lambda/auth.zip"
+  source_dir  = "${path.module}/../../../../backend"
+  excludes = [
+    ".git",
+    ".gitignore",
+    "README.md",
+    "test-events",
+    "test-local.js",
+    "quick-start.sh",
+    "deploy.sh",
+    "*.md"
+  ]
+}
+
+# Signup Lambda Function
+resource "aws_lambda_function" "signup" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-signup"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/signup.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      COGNITO_USER_POOL_ID                = var.cognito_user_pool_id
+      ALLOWED_EMAIL_DOMAINS               = join(",", var.allowed_email_domains)
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.signup,
+    aws_iam_role_policy_attachment.auth_basic,
+    aws_iam_role_policy.auth_cognito
+  ]
+}
+
+# Login Lambda Function
+resource "aws_lambda_function" "login" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-login"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/login.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.login,
+    aws_iam_role_policy_attachment.auth_basic,
+    aws_iam_role_policy.auth_cognito
+  ]
+}
+
+# Confirm Signup Lambda Function
+resource "aws_lambda_function" "confirm_signup" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-confirm-signup"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/confirmSignup.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.confirm_signup,
+    aws_iam_role_policy_attachment.auth_basic,
+    aws_iam_role_policy.auth_cognito
+  ]
+}
+

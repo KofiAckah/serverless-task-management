@@ -74,9 +74,9 @@ resource "aws_api_gateway_method" "get_tasks" {
   authorizer_id = aws_api_gateway_authorizer.cognito.id
 
   request_parameters = {
-    "method.request.header.Authorization"      = true
-    "method.request.querystring.status"        = false
-    "method.request.querystring.taskId"        = false
+    "method.request.header.Authorization" = true
+    "method.request.querystring.status"   = false
+    "method.request.querystring.taskId"   = false
   }
 }
 
@@ -155,8 +155,8 @@ resource "aws_api_gateway_method" "get_assigned_tasks" {
   authorizer_id = aws_api_gateway_authorizer.cognito.id
 
   request_parameters = {
-    "method.request.header.Authorization"      = true
-    "method.request.querystring.status"        = false
+    "method.request.header.Authorization" = true
+    "method.request.querystring.status"   = false
   }
 }
 
@@ -457,15 +457,266 @@ resource "aws_api_gateway_integration_response" "task_close_options" {
 }
 
 #=============================================================================
+# /auth Resource (Public - No Authorization)
+#=============================================================================
+
+resource "aws_api_gateway_resource" "auth" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_rest_api.main.root_resource_id
+  path_part   = "auth"
+}
+
+# /auth/signup Resource
+resource "aws_api_gateway_resource" "auth_signup" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "signup"
+}
+
+# POST /auth/signup - User Registration
+resource "aws_api_gateway_method" "signup" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_signup.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "signup" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_signup.id
+  http_method             = aws_api_gateway_method.signup.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.signup_lambda_invoke_arn
+}
+
+# OPTIONS /auth/signup - CORS
+resource "aws_api_gateway_method" "auth_signup_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_signup.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_signup_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_signup.id
+  http_method = aws_api_gateway_method.auth_signup_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_signup_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_signup.id
+  http_method = aws_api_gateway_method.auth_signup_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_signup_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_signup.id
+  http_method = aws_api_gateway_method.auth_signup_options.http_method
+  status_code = aws_api_gateway_method_response.auth_signup_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_signup_options]
+}
+
+# /auth/login Resource
+resource "aws_api_gateway_resource" "auth_login" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "login"
+}
+
+# POST /auth/login - User Login
+resource "aws_api_gateway_method" "login" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_login.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "login" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_login.id
+  http_method             = aws_api_gateway_method.login.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.login_lambda_invoke_arn
+}
+
+# OPTIONS /auth/login - CORS
+resource "aws_api_gateway_method" "auth_login_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_login.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_login_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_login.id
+  http_method = aws_api_gateway_method.auth_login_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_login_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_login.id
+  http_method = aws_api_gateway_method.auth_login_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_login_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_login.id
+  http_method = aws_api_gateway_method.auth_login_options.http_method
+  status_code = aws_api_gateway_method_response.auth_login_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_login_options]
+}
+
+# /auth/confirm Resource
+resource "aws_api_gateway_resource" "auth_confirm" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "confirm"
+}
+
+# POST /auth/confirm - Confirm User Signup
+resource "aws_api_gateway_method" "confirm_signup" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_confirm.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "confirm_signup" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_confirm.id
+  http_method             = aws_api_gateway_method.confirm_signup.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.confirm_signup_lambda_invoke_arn
+}
+
+# OPTIONS /auth/confirm - CORS
+resource "aws_api_gateway_method" "auth_confirm_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_confirm.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_confirm_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_confirm.id
+  http_method = aws_api_gateway_method.auth_confirm_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_confirm_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_confirm.id
+  http_method = aws_api_gateway_method.auth_confirm_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_confirm_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_confirm.id
+  http_method = aws_api_gateway_method.auth_confirm_options.http_method
+  status_code = aws_api_gateway_method_response.auth_confirm_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_confirm_options]
+}
+
+#=============================================================================
 # Lambda Permission for API Gateway
 #=============================================================================
 
+# Permission for API Gateway to invoke Tasks Lambda
 resource "aws_lambda_permission" "api_gateway" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = var.lambda_function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
+# Permission for API Gateway to invoke Signup Lambda
+resource "aws_lambda_permission" "api_gateway_signup" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.signup_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
+# Permission for API Gateway to invoke Login Lambda
+resource "aws_lambda_permission" "api_gateway_login" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.login_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
+# Permission for API Gateway to invoke Confirm Signup Lambda
+resource "aws_lambda_permission" "api_gateway_confirm_signup" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.confirm_signup_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
 }
 
 #=============================================================================
@@ -483,6 +734,10 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.task_by_id.id,
       aws_api_gateway_resource.task_assign.id,
       aws_api_gateway_resource.task_close.id,
+      aws_api_gateway_resource.auth.id,
+      aws_api_gateway_resource.auth_signup.id,
+      aws_api_gateway_resource.auth_login.id,
+      aws_api_gateway_resource.auth_confirm.id,
       # Authorizer
       aws_api_gateway_authorizer.cognito.id,
       # Main Methods
@@ -492,6 +747,10 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.update_task.id,
       aws_api_gateway_method.assign_task.id,
       aws_api_gateway_method.close_task.id,
+      # Auth Methods
+      aws_api_gateway_method.signup.id,
+      aws_api_gateway_method.login.id,
+      aws_api_gateway_method.confirm_signup.id,
       # Main Integrations
       aws_api_gateway_integration.create_task.id,
       aws_api_gateway_integration.get_tasks.id,
@@ -499,30 +758,49 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.update_task.id,
       aws_api_gateway_integration.assign_task.id,
       aws_api_gateway_integration.close_task.id,
+      # Auth Integrations
+      aws_api_gateway_integration.signup.id,
+      aws_api_gateway_integration.login.id,
+      aws_api_gateway_integration.confirm_signup.id,
       # OPTIONS Methods (CORS)
       aws_api_gateway_method.tasks_options.id,
       aws_api_gateway_method.tasks_assigned_options.id,
       aws_api_gateway_method.task_by_id_options.id,
       aws_api_gateway_method.task_assign_options.id,
       aws_api_gateway_method.task_close_options.id,
+      aws_api_gateway_method.auth_signup_options.id,
+      aws_api_gateway_method.auth_login_options.id,
+      aws_api_gateway_method.auth_confirm_options.id,
       # OPTIONS Integrations
       aws_api_gateway_integration.tasks_options.id,
       aws_api_gateway_integration.tasks_assigned_options.id,
       aws_api_gateway_integration.task_by_id_options.id,
       aws_api_gateway_integration.task_assign_options.id,
       aws_api_gateway_integration.task_close_options.id,
+      aws_api_gateway_integration.auth_signup_options.id,
+      aws_api_gateway_integration.auth_login_options.id,
+      aws_api_gateway_integration.auth_confirm_options.id,
       # OPTIONS Method Responses
       aws_api_gateway_method_response.tasks_options.id,
       aws_api_gateway_method_response.tasks_assigned_options.id,
       aws_api_gateway_method_response.task_by_id_options.id,
       aws_api_gateway_method_response.task_assign_options.id,
       aws_api_gateway_method_response.task_close_options.id,
+      aws_api_gateway_method_response.auth_signup_options.id,
+      aws_api_gateway_method_response.auth_login_options.id,
+      aws_api_gateway_integration.signup,
+      aws_api_gateway_integration.login,
+      aws_api_gateway_integration.confirm_signup,
+      aws_api_gateway_method_response.auth_confirm_options.id,
       # OPTIONS Integration Responses
       aws_api_gateway_integration_response.tasks_options.id,
       aws_api_gateway_integration_response.tasks_assigned_options.id,
       aws_api_gateway_integration_response.task_by_id_options.id,
       aws_api_gateway_integration_response.task_assign_options.id,
       aws_api_gateway_integration_response.task_close_options.id,
+      aws_api_gateway_integration_response.auth_signup_options.id,
+      aws_api_gateway_integration_response.auth_login_options.id,
+      aws_api_gateway_integration_response.auth_confirm_options.id,
     ]))
   }
 

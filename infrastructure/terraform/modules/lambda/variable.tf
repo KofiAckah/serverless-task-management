@@ -81,6 +81,11 @@ variable "cognito_user_pool_arn" {
   type        = string
 }
 
+variable "cognito_client_id" {
+  description = "Cognito User Pool Client ID for authentication"
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags for resources"
   type        = map(string)

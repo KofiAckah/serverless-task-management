@@ -31,12 +31,12 @@ output "authorizer_id" {
 output "api_endpoints" {
   description = "Complete API endpoints for all routes"
   value = {
-    create_task          = "${aws_api_gateway_stage.main.invoke_url}/tasks"
-    get_tasks            = "${aws_api_gateway_stage.main.invoke_url}/tasks"
-    get_assigned_tasks   = "${aws_api_gateway_stage.main.invoke_url}/tasks/assigned"
-    update_task          = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}"
-    assign_task          = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}/assign"
-    close_task           = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}/close"
+    create_task        = "${aws_api_gateway_stage.main.invoke_url}/tasks"
+    get_tasks          = "${aws_api_gateway_stage.main.invoke_url}/tasks"
+    get_assigned_tasks = "${aws_api_gateway_stage.main.invoke_url}/tasks/assigned"
+    update_task        = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}"
+    assign_task        = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}/assign"
+    close_task         = "${aws_api_gateway_stage.main.invoke_url}/tasks/{taskId}/close"
   }
 }
 

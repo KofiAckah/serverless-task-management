@@ -55,19 +55,28 @@ module "lambda" {
   # Cognito configuration
   cognito_user_pool_id  = module.cognito.user_pool_id
   cognito_user_pool_arn = module.cognito.user_pool_arn
+  cognito_client_id     = module.cognito.client_id
 }
 
 module "api_gateway" {
   source = "./modules/api-gateway"
 
-  project_name         = var.project_name
-  environment          = var.environment
-  region               = var.aws_region
-  tags                 = var.tags
+  project_name = var.project_name
+  environment  = var.environment
+  region       = var.aws_region
+  tags         = var.tags
 
   # Lambda configuration
   lambda_invoke_arn    = module.lambda.tasks_invoke_arn
   lambda_function_name = module.lambda.tasks_function_name
+
+  # Auth Lambda configuration
+  signup_lambda_invoke_arn            = module.lambda.signup_invoke_arn
+  signup_lambda_function_name         = module.lambda.signup_function_name
+  login_lambda_invoke_arn             = module.lambda.login_invoke_arn
+  login_lambda_function_name          = module.lambda.login_function_name
+  confirm_signup_lambda_invoke_arn    = module.lambda.confirm_signup_invoke_arn
+  confirm_signup_lambda_function_name = module.lambda.confirm_signup_function_name
 
   # Cognito configuration
   cognito_user_pool_arn = module.cognito.user_pool_arn

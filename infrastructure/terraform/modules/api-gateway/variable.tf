@@ -18,6 +18,36 @@ variable "lambda_function_name" {
   type        = string
 }
 
+variable "signup_lambda_invoke_arn" {
+  description = "Invoke ARN of the signup Lambda function"
+  type        = string
+}
+
+variable "signup_lambda_function_name" {
+  description = "Name of the signup Lambda function"
+  type        = string
+}
+
+variable "login_lambda_invoke_arn" {
+  description = "Invoke ARN of the login Lambda function"
+  type        = string
+}
+
+variable "login_lambda_function_name" {
+  description = "Name of the login Lambda function"
+  type        = string
+}
+
+variable "confirm_signup_lambda_invoke_arn" {
+  description = "Invoke ARN of the confirm signup Lambda function"
+  type        = string
+}
+
+variable "confirm_signup_lambda_function_name" {
+  description = "Name of the confirm signup Lambda function"
+  type        = string
+}
+
 variable "cognito_user_pool_arn" {
   description = "ARN of the Cognito User Pool for authorization"
   type        = string
