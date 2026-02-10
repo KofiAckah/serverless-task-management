@@ -19,6 +19,16 @@ variable "pre_signup_lambda_arn" {
   default     = null
 }
 
+variable "ses_email_identity_arn" {
+  description = "ARN of the SES email identity for sending Cognito emails"
+  type        = string
+}
+
+variable "sender_email" {
+  description = "Sender email address for Cognito verification emails"
+  type        = string
+}
+
 variable "tags" {
   description = "Common tags for resources"
   type        = map(string)

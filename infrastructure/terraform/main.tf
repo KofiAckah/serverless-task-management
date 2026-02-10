@@ -1,11 +1,15 @@
 module "cognito" {
   source = "./modules/cognito"
 
-  project_name          = var.project_name
-  environment           = var.environment
-  allowed_email_domains = var.allowed_email_domains
-  pre_signup_lambda_arn = module.lambda.pre_signup_function_arn
-  tags                  = var.tags
+  project_name           = var.project_name
+  environment            = var.environment
+  allowed_email_domains  = var.allowed_email_domains
+  pre_signup_lambda_arn  = module.lambda.pre_signup_function_arn
+  ses_email_identity_arn = module.ses.ses_identity_arn
+  sender_email           = var.sender_email
+  tags                   = var.tags
+
+  depends_on = [module.ses]
 }
 
 module "dynamodb" {

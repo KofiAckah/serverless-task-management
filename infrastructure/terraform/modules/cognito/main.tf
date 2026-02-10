@@ -4,6 +4,13 @@ resource "aws_cognito_user_pool" "main" {
   username_attributes      = var.username_attributes
   auto_verified_attributes = var.auto_verified_attributes
 
+  # Email configuration - Use SES for sending emails
+  email_configuration {
+    email_sending_account = "DEVELOPER"
+    source_arn            = var.ses_email_identity_arn
+    from_email_address    = var.sender_email
+  }
+
   password_policy {
     minimum_length                   = var.password_minimum_length
     require_lowercase                = var.password_require_lowercase
