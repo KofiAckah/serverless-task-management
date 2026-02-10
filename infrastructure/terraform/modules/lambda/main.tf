@@ -655,3 +655,36 @@ resource "aws_cloudwatch_log_group" "refresh" {
   tags = var.tags
 }
 
+# Get Current User (Me) Lambda Function
+resource "aws_lambda_function" "me" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-me"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/me.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.me,
+    aws_iam_role_policy_attachment.auth_basic
+  ]
+}
+
+# CloudWatch Log Group for Me
+resource "aws_cloudwatch_log_group" "me" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-me"
+  retention_in_days = 7
+
+  tags = var.tags
+}

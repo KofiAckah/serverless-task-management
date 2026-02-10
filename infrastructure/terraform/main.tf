@@ -85,6 +85,8 @@ module "api_gateway" {
   logout_lambda_function_name         = module.lambda.logout_function_name
   refresh_lambda_invoke_arn           = module.lambda.refresh_invoke_arn
   refresh_lambda_function_name        = module.lambda.refresh_function_name
+  me_lambda_invoke_arn                = module.lambda.me_invoke_arn
+  me_lambda_function_name             = module.lambda.me_function_name
 
   # Cognito configuration
   cognito_user_pool_arn = module.cognito.user_pool_arn

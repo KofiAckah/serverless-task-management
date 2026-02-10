@@ -81,6 +81,11 @@ exports.handler = async (event) => {
     const signUpResponse = await cognitoClient.send(signUpCommand);
 
     console.log('User created successfully:', signUpResponse.UserSub);
+    console.log('Signup Response:', JSON.stringify({
+      userSub: signUpResponse.UserSub,
+      userConfirmed: signUpResponse.UserConfirmed,
+      codeDeliveryDetails: signUpResponse.CodeDeliveryDetails
+    }, null, 2));
 
     // Add user to appropriate Cognito group
     const groupName = normalizedRole === 'admin' ? 'Admin' : 'Member';

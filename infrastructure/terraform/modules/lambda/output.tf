@@ -137,6 +137,21 @@ output "refresh_invoke_arn" {
   value       = aws_lambda_function.refresh.invoke_arn
 }
 
+output "me_function_name" {
+  description = "Name of the get current user (me) Lambda function"
+  value       = aws_lambda_function.me.function_name
+}
+
+output "me_function_arn" {
+  description = "ARN of the get current user (me) Lambda function"
+  value       = aws_lambda_function.me.arn
+}
+
+output "me_invoke_arn" {
+  description = "Invoke ARN of the get current user (me) Lambda function"
+  value       = aws_lambda_function.me.invoke_arn
+}
+
 output "auth_role_arn" {
   description = "ARN of the auth Lambda IAM role"
   value       = aws_iam_role.auth.arn
@@ -154,5 +169,6 @@ output "log_groups" {
     confirm_signup = aws_cloudwatch_log_group.confirm_signup.name
     logout         = aws_cloudwatch_log_group.logout.name
     refresh        = aws_cloudwatch_log_group.refresh.name
+    me             = aws_cloudwatch_log_group.me.name
   }
 }

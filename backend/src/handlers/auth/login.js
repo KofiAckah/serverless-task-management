@@ -60,6 +60,22 @@ exports.handler = async (event) => {
     } = authResponse.AuthenticationResult;
 
     console.log('User authenticated successfully:', email);
+    
+    // Decode token payload for debugging (without verification)
+    try {
+      const idTokenPayload = JSON.parse(
+        Buffer.from(IdToken.split('.')[1], 'base64').toString()
+      );
+      console.log('ID Token Claims:', JSON.stringify({
+        sub: idTokenPayload.sub,
+        email: idTokenPayload.email,
+        'custom:role': idTokenPayload['custom:role'],
+        'cognito:groups': idTokenPayload['cognito:groups'],
+        token_use: idTokenPayload.token_use
+      }, null, 2));
+    } catch (decodeError) {
+      console.warn('Failed to decode token for logging:', decodeError.message);
+    }
 
     return createSuccessResponse(
       HTTP_STATUS.OK,

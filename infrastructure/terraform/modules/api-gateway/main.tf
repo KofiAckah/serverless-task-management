@@ -826,6 +826,82 @@ resource "aws_api_gateway_integration_response" "auth_refresh_options" {
   depends_on = [aws_api_gateway_integration.auth_refresh_options]
 }
 
+# /auth/me Resource
+resource "aws_api_gateway_resource" "auth_me" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "me"
+}
+
+# GET /auth/me - Get Current User (Requires Auth)
+resource "aws_api_gateway_method" "me" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_me.id
+  http_method   = "GET"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "me" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_me.id
+  http_method             = aws_api_gateway_method.me.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.me_lambda_invoke_arn
+}
+
+# OPTIONS /auth/me - CORS
+resource "aws_api_gateway_method" "auth_me_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_me.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_me_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_me.id
+  http_method = aws_api_gateway_method.auth_me_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_me_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_me.id
+  http_method = aws_api_gateway_method.auth_me_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_me_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_me.id
+  http_method = aws_api_gateway_method.auth_me_options.http_method
+  status_code = aws_api_gateway_method_response.auth_me_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'GET,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_me_options]
+}
+
 #=============================================================================
 # Lambda Permission for API Gateway
 #=============================================================================
@@ -884,6 +960,15 @@ resource "aws_lambda_permission" "api_gateway_refresh" {
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
 }
 
+# Permission for API Gateway to invoke Me Lambda
+resource "aws_lambda_permission" "api_gateway_me" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.me_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
 #=============================================================================
 # API Gateway Deployment
 #=============================================================================
@@ -905,6 +990,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.auth_confirm.id,
       aws_api_gateway_resource.auth_logout.id,
       aws_api_gateway_resource.auth_refresh.id,
+      aws_api_gateway_resource.auth_me.id,
       # Authorizer
       aws_api_gateway_authorizer.cognito.id,
       # Main Methods
@@ -920,6 +1006,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.confirm_signup.id,
       aws_api_gateway_method.logout.id,
       aws_api_gateway_method.refresh.id,
+      aws_api_gateway_method.me.id,
       # Main Integrations
       aws_api_gateway_integration.create_task.id,
       aws_api_gateway_integration.get_tasks.id,
@@ -933,6 +1020,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.confirm_signup.id,
       aws_api_gateway_integration.logout.id,
       aws_api_gateway_integration.refresh.id,
+      aws_api_gateway_integration.me.id,
       # OPTIONS Methods (CORS)
       aws_api_gateway_method.tasks_options.id,
       aws_api_gateway_method.tasks_assigned_options.id,
@@ -943,6 +1031,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.auth_login_options.id,
       aws_api_gateway_method.auth_confirm_options.id,
       aws_api_gateway_method.auth_logout_options.id,
+      aws_api_gateway_method.auth_me_options.id,
       aws_api_gateway_method.auth_refresh_options.id,
       # OPTIONS Integrations
       aws_api_gateway_integration.tasks_options.id,
@@ -955,6 +1044,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.auth_confirm_options.id,
       aws_api_gateway_integration.auth_logout_options.id,
       aws_api_gateway_integration.auth_refresh_options.id,
+      aws_api_gateway_integration.auth_me_options.id,
       # OPTIONS Method Responses
       aws_api_gateway_method_response.tasks_options.id,
       aws_api_gateway_method_response.tasks_assigned_options.id,
@@ -967,10 +1057,11 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.login,
       aws_api_gateway_integration.confirm_signup,
       aws_api_gateway_integration.logout,
-      aws_api_gateway_integration.refresh,
+      aws_api_gateway_integration.me,
       aws_api_gateway_method_response.auth_confirm_options.id,
       aws_api_gateway_method_response.auth_logout_options.id,
       aws_api_gateway_method_response.auth_refresh_options.id,
+      aws_api_gateway_method_response.auth_me_options.id,
       # OPTIONS Integration Responses
       aws_api_gateway_integration_response.tasks_options.id,
       aws_api_gateway_integration_response.tasks_assigned_options.id,
@@ -980,6 +1071,7 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration_response.auth_signup_options.id,
       aws_api_gateway_integration_response.auth_login_options.id,
       aws_api_gateway_integration_response.auth_confirm_options.id,
+      aws_api_gateway_integration_response.auth_me_options.id,
       aws_api_gateway_integration_response.auth_logout_options.id,
       aws_api_gateway_integration_response.auth_refresh_options.id,
     ]))
