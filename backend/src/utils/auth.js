@@ -10,15 +10,30 @@ function getUserFromEvent(event) {
   
   const claims = event.requestContext.authorizer.claims;
   
-  // Parse Cognito groups
+  // Get role from custom:role attribute (set during signup)
+  const customRole = claims['custom:role'];
+  
+  // Parse Cognito groups as fallback
   const groupsString = claims['cognito:groups'] || '[]';
   const groups = JSON.parse(groupsString.replace(/'/g, '"'));
+  
+  // Determine user role - prioritize custom:role, then check groups
+  let userRole = USER_ROLES.MEMBER; // Default role
+  
+  if (customRole) {
+    userRole = customRole;
+  } else if (groups.includes(USER_ROLES.ADMIN)) {
+    userRole = USER_ROLES.ADMIN;
+  } else if (groups.includes(USER_ROLES.MEMBER)) {
+    userRole = USER_ROLES.MEMBER;
+  }
   
   return {
     userId: claims.sub,
     email: claims.email,
     groups: groups,
-    role: groups.includes(USER_ROLES.ADMIN) ? USER_ROLES.ADMIN : USER_ROLES.MEMBER
+    role: userRole,
+    customRole: customRole // Keep original for reference
   };
 }
 

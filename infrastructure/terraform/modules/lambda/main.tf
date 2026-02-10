@@ -434,7 +434,7 @@ resource "aws_iam_role_policy_attachment" "auth_basic" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-# Auth Lambda Cognito Policy (for signup, login, confirm)
+# Auth Lambda Cognito Policy (for signup, login, confirm, logout, refresh)
 resource "aws_iam_role_policy" "auth_cognito" {
   name = "${var.project_name}-${var.environment}-auth-cognito"
   role = aws_iam_role.auth.id
@@ -449,7 +449,8 @@ resource "aws_iam_role_policy" "auth_cognito" {
           "cognito-idp:InitiateAuth",
           "cognito-idp:ConfirmSignUp",
           "cognito-idp:AdminAddUserToGroup",
-          "cognito-idp:AdminGetUser"
+          "cognito-idp:AdminGetUser",
+          "cognito-idp:GlobalSignOut"
         ]
         Resource = var.cognito_user_pool_arn
       }
@@ -580,5 +581,77 @@ resource "aws_lambda_function" "confirm_signup" {
     aws_iam_role_policy_attachment.auth_basic,
     aws_iam_role_policy.auth_cognito
   ]
+}
+
+# Logout Lambda Function
+resource "aws_lambda_function" "logout" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-logout"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/logout.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.logout,
+    aws_iam_role_policy_attachment.auth_basic,
+    aws_iam_role_policy.auth_cognito
+  ]
+}
+
+# CloudWatch Log Group for Logout
+resource "aws_cloudwatch_log_group" "logout" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-logout"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+# Refresh Token Lambda Function
+resource "aws_lambda_function" "refresh" {
+  filename         = data.archive_file.auth.output_path
+  function_name    = "${var.project_name}-${var.environment}-refresh"
+  role             = aws_iam_role.auth.arn
+  handler          = "src/handlers/auth/refresh.handler"
+  source_code_hash = data.archive_file.auth.output_base64sha256
+  runtime          = var.runtime
+  timeout          = var.timeout
+  memory_size      = var.memory_size
+
+  environment {
+    variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      ENVIRONMENT                         = var.environment
+      AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.refresh,
+    aws_iam_role_policy_attachment.auth_basic,
+    aws_iam_role_policy.auth_cognito
+  ]
+}
+
+# CloudWatch Log Group for Refresh
+resource "aws_cloudwatch_log_group" "refresh" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-refresh"
+  retention_in_days = 7
+
+  tags = var.tags
 }
 

@@ -107,6 +107,36 @@ output "confirm_signup_invoke_arn" {
   value       = aws_lambda_function.confirm_signup.invoke_arn
 }
 
+output "logout_function_name" {
+  description = "Name of the logout Lambda function"
+  value       = aws_lambda_function.logout.function_name
+}
+
+output "logout_function_arn" {
+  description = "ARN of the logout Lambda function"
+  value       = aws_lambda_function.logout.arn
+}
+
+output "logout_invoke_arn" {
+  description = "Invoke ARN of the logout Lambda function"
+  value       = aws_lambda_function.logout.invoke_arn
+}
+
+output "refresh_function_name" {
+  description = "Name of the refresh token Lambda function"
+  value       = aws_lambda_function.refresh.function_name
+}
+
+output "refresh_function_arn" {
+  description = "ARN of the refresh token Lambda function"
+  value       = aws_lambda_function.refresh.arn
+}
+
+output "refresh_invoke_arn" {
+  description = "Invoke ARN of the refresh token Lambda function"
+  value       = aws_lambda_function.refresh.invoke_arn
+}
+
 output "auth_role_arn" {
   description = "ARN of the auth Lambda IAM role"
   value       = aws_iam_role.auth.arn
@@ -122,5 +152,7 @@ output "log_groups" {
     signup         = aws_cloudwatch_log_group.signup.name
     login          = aws_cloudwatch_log_group.login.name
     confirm_signup = aws_cloudwatch_log_group.confirm_signup.name
+    logout         = aws_cloudwatch_log_group.logout.name
+    refresh        = aws_cloudwatch_log_group.refresh.name
   }
 }

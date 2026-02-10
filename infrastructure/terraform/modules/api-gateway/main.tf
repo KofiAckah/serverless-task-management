@@ -679,6 +679,153 @@ resource "aws_api_gateway_integration_response" "auth_confirm_options" {
   depends_on = [aws_api_gateway_integration.auth_confirm_options]
 }
 
+# /auth/logout Resource
+resource "aws_api_gateway_resource" "auth_logout" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "logout"
+}
+
+# POST /auth/logout - User Logout (Requires Token)
+resource "aws_api_gateway_method" "logout" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_logout.id
+  http_method   = "POST"
+  authorization = "COGNITO_USER_POOLS"
+  authorizer_id = aws_api_gateway_authorizer.cognito.id
+
+  request_parameters = {
+    "method.request.header.Authorization" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "logout" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_logout.id
+  http_method             = aws_api_gateway_method.logout.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.logout_lambda_invoke_arn
+}
+
+# OPTIONS /auth/logout - CORS
+resource "aws_api_gateway_method" "auth_logout_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_logout.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_logout_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_logout.id
+  http_method = aws_api_gateway_method.auth_logout_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_logout_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_logout.id
+  http_method = aws_api_gateway_method.auth_logout_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_logout_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_logout.id
+  http_method = aws_api_gateway_method.auth_logout_options.http_method
+  status_code = aws_api_gateway_method_response.auth_logout_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_logout_options]
+}
+
+# /auth/refresh Resource
+resource "aws_api_gateway_resource" "auth_refresh" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  parent_id   = aws_api_gateway_resource.auth.id
+  path_part   = "refresh"
+}
+
+# POST /auth/refresh - Refresh Tokens (No Auth Required)
+resource "aws_api_gateway_method" "refresh" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_refresh.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "refresh" {
+  rest_api_id             = aws_api_gateway_rest_api.main.id
+  resource_id             = aws_api_gateway_resource.auth_refresh.id
+  http_method             = aws_api_gateway_method.refresh.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = var.refresh_lambda_invoke_arn
+}
+
+# OPTIONS /auth/refresh - CORS
+resource "aws_api_gateway_method" "auth_refresh_options" {
+  rest_api_id   = aws_api_gateway_rest_api.main.id
+  resource_id   = aws_api_gateway_resource.auth_refresh.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "auth_refresh_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_refresh.id
+  http_method = aws_api_gateway_method.auth_refresh_options.http_method
+  type        = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "auth_refresh_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_refresh.id
+  http_method = aws_api_gateway_method.auth_refresh_options.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "auth_refresh_options" {
+  rest_api_id = aws_api_gateway_rest_api.main.id
+  resource_id = aws_api_gateway_resource.auth_refresh.id
+  http_method = aws_api_gateway_method.auth_refresh_options.http_method
+  status_code = aws_api_gateway_method_response.auth_refresh_options.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
+  }
+
+  depends_on = [aws_api_gateway_integration.auth_refresh_options]
+}
+
 #=============================================================================
 # Lambda Permission for API Gateway
 #=============================================================================
@@ -719,6 +866,24 @@ resource "aws_lambda_permission" "api_gateway_confirm_signup" {
   source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
 }
 
+# Permission for API Gateway to invoke Logout Lambda
+resource "aws_lambda_permission" "api_gateway_logout" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.logout_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
+# Permission for API Gateway to invoke Refresh Lambda
+resource "aws_lambda_permission" "api_gateway_refresh" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = var.refresh_lambda_function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.main.execution_arn}/*/*/*"
+}
+
 #=============================================================================
 # API Gateway Deployment
 #=============================================================================
@@ -738,6 +903,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_resource.auth_signup.id,
       aws_api_gateway_resource.auth_login.id,
       aws_api_gateway_resource.auth_confirm.id,
+      aws_api_gateway_resource.auth_logout.id,
+      aws_api_gateway_resource.auth_refresh.id,
       # Authorizer
       aws_api_gateway_authorizer.cognito.id,
       # Main Methods
@@ -751,6 +918,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.signup.id,
       aws_api_gateway_method.login.id,
       aws_api_gateway_method.confirm_signup.id,
+      aws_api_gateway_method.logout.id,
+      aws_api_gateway_method.refresh.id,
       # Main Integrations
       aws_api_gateway_integration.create_task.id,
       aws_api_gateway_integration.get_tasks.id,
@@ -762,6 +931,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.signup.id,
       aws_api_gateway_integration.login.id,
       aws_api_gateway_integration.confirm_signup.id,
+      aws_api_gateway_integration.logout.id,
+      aws_api_gateway_integration.refresh.id,
       # OPTIONS Methods (CORS)
       aws_api_gateway_method.tasks_options.id,
       aws_api_gateway_method.tasks_assigned_options.id,
@@ -771,6 +942,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_method.auth_signup_options.id,
       aws_api_gateway_method.auth_login_options.id,
       aws_api_gateway_method.auth_confirm_options.id,
+      aws_api_gateway_method.auth_logout_options.id,
+      aws_api_gateway_method.auth_refresh_options.id,
       # OPTIONS Integrations
       aws_api_gateway_integration.tasks_options.id,
       aws_api_gateway_integration.tasks_assigned_options.id,
@@ -780,6 +953,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.auth_signup_options.id,
       aws_api_gateway_integration.auth_login_options.id,
       aws_api_gateway_integration.auth_confirm_options.id,
+      aws_api_gateway_integration.auth_logout_options.id,
+      aws_api_gateway_integration.auth_refresh_options.id,
       # OPTIONS Method Responses
       aws_api_gateway_method_response.tasks_options.id,
       aws_api_gateway_method_response.tasks_assigned_options.id,
@@ -791,7 +966,11 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration.signup,
       aws_api_gateway_integration.login,
       aws_api_gateway_integration.confirm_signup,
+      aws_api_gateway_integration.logout,
+      aws_api_gateway_integration.refresh,
       aws_api_gateway_method_response.auth_confirm_options.id,
+      aws_api_gateway_method_response.auth_logout_options.id,
+      aws_api_gateway_method_response.auth_refresh_options.id,
       # OPTIONS Integration Responses
       aws_api_gateway_integration_response.tasks_options.id,
       aws_api_gateway_integration_response.tasks_assigned_options.id,
@@ -801,6 +980,8 @@ resource "aws_api_gateway_deployment" "main" {
       aws_api_gateway_integration_response.auth_signup_options.id,
       aws_api_gateway_integration_response.auth_login_options.id,
       aws_api_gateway_integration_response.auth_confirm_options.id,
+      aws_api_gateway_integration_response.auth_logout_options.id,
+      aws_api_gateway_integration_response.auth_refresh_options.id,
     ]))
   }
 

@@ -48,6 +48,26 @@ variable "confirm_signup_lambda_function_name" {
   type        = string
 }
 
+variable "logout_lambda_invoke_arn" {
+  description = "Invoke ARN of the logout Lambda function"
+  type        = string
+}
+
+variable "logout_lambda_function_name" {
+  description = "Name of the logout Lambda function"
+  type        = string
+}
+
+variable "refresh_lambda_invoke_arn" {
+  description = "Invoke ARN of the refresh token Lambda function"
+  type        = string
+}
+
+variable "refresh_lambda_function_name" {
+  description = "Name of the refresh token Lambda function"
+  type        = string
+}
+
 variable "cognito_user_pool_arn" {
   description = "ARN of the Cognito User Pool for authorization"
   type        = string
