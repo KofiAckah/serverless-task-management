@@ -25,23 +25,32 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('accessToken');
-      const savedUser = localStorage.getItem('user');
-      
-      if (token && savedUser) {
-        try {
-          setUser(JSON.parse(savedUser));
-          // Optionally verify token with backend
-          const response = await authAPI.getCurrentUser();
-          setUser(response.data.user);
-          localStorage.setItem('user', JSON.stringify(response.data.user));
-        } catch (err) {
-          console.error('Auth check failed:', err);
-          logout();
+      try {
+        const token = localStorage.getItem('accessToken');
+        const savedUser = localStorage.getItem('user');
+        
+        if (token && savedUser) {
+          try {
+            setUser(JSON.parse(savedUser));
+            // Optionally verify token with backend
+            const response = await authAPI.getCurrentUser();
+            setUser(response.data.user);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+          } catch (err) {
+            console.error('Auth verification failed:', err);
+            // Clear invalid auth data
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user');
+            setUser(null);
+          }
         }
+      } catch (err) {
+        console.error('Auth check error:', err);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkAuth();
