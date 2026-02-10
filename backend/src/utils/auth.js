@@ -13,9 +13,28 @@ function getUserFromEvent(event) {
   // Get role from custom:role attribute (set during signup)
   const customRole = claims['custom:role'];
   
-  // Parse Cognito groups as fallback
-  const groupsString = claims['cognito:groups'] || '[]';
-  const groups = JSON.parse(groupsString.replace(/'/g, '"'));
+  // Parse Cognito groups - handle both string and array formats
+  let groups = [];
+  const cognitoGroups = claims['cognito:groups'];
+  
+  if (cognitoGroups) {
+    if (typeof cognitoGroups === 'string') {
+      // Could be a plain string like "Admin" or a JSON array string like "['Admin']"
+      if (cognitoGroups.startsWith('[') || cognitoGroups.startsWith('{')) {
+        try {
+          groups = JSON.parse(cognitoGroups.replace(/'/g, '"'));
+        } catch (e) {
+          // If parsing fails, treat as single group
+          groups = [cognitoGroups];
+        }
+      } else {
+        // Plain string - single group
+        groups = [cognitoGroups];
+      }
+    } else if (Array.isArray(cognitoGroups)) {
+      groups = cognitoGroups;
+    }
+  }
   
   // Determine user role - prioritize custom:role, then check groups
   let userRole = USER_ROLES.MEMBER; // Default role

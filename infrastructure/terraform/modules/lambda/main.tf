@@ -450,7 +450,8 @@ resource "aws_iam_role_policy" "auth_cognito" {
           "cognito-idp:ConfirmSignUp",
           "cognito-idp:AdminAddUserToGroup",
           "cognito-idp:AdminGetUser",
-          "cognito-idp:GlobalSignOut"
+          "cognito-idp:GlobalSignOut",
+          "cognito-idp:AdminUserGlobalSignOut"
         ]
         Resource = var.cognito_user_pool_arn
       }
@@ -597,6 +598,7 @@ resource "aws_lambda_function" "logout" {
   environment {
     variables = {
       COGNITO_CLIENT_ID                   = var.cognito_client_id
+      COGNITO_USER_POOL_ID                = var.cognito_user_pool_id
       ENVIRONMENT                         = var.environment
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
@@ -668,6 +670,8 @@ resource "aws_lambda_function" "me" {
 
   environment {
     variables = {
+      COGNITO_CLIENT_ID                   = var.cognito_client_id
+      COGNITO_USER_POOL_ID                = var.cognito_user_pool_id
       ENVIRONMENT                         = var.environment
       AWS_NODEJS_CONNECTION_REUSE_ENABLED = "1"
     }
