@@ -144,8 +144,49 @@ async function getUsersByRole(role) {
   }
 }
 
+/**
+ * Get all admin user emails from Cognito
+ * @returns {Promise<Array<string>>} Array of admin email addresses
+ */
+async function getAdminEmails() {
+  try {
+    if (!USER_POOL_ID) {
+      console.error('COGNITO_USER_POOL_ID environment variable not set');
+      return [];
+    }
+
+    const command = new ListUsersCommand({
+      UserPoolId: USER_POOL_ID,
+      Filter: 'custom:role = "admin"'
+    });
+
+    const response = await cognitoClient.send(command);
+    
+    if (!response.Users || response.Users.length === 0) {
+      console.log('No admin users found');
+      return [];
+    }
+
+    // Extract only email addresses, filter out nulls
+    const adminEmails = response.Users
+      .map(user => {
+        const emailAttr = user.Attributes?.find(attr => attr.Name === 'email');
+        return emailAttr?.Value || null;
+      })
+      .filter(email => email !== null);
+
+    console.log(`Found ${adminEmails.length} admin emails`);
+    return adminEmails;
+
+  } catch (error) {
+    console.error('Error fetching admin emails from Cognito:', error);
+    return [];
+  }
+}
+
 module.exports = {
   getUserEmail,
   getUserRole,
-  getUsersByRole
+  getUsersByRole,
+  getAdminEmails
 };

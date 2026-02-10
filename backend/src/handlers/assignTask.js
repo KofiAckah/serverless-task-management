@@ -1,4 +1,4 @@
-const { getItem, putItem } = require('../utils/dynamodb');
+const { getItem, putItem, getTaskAssignments } = require('../utils/dynamodb');
 const { getUserFromEvent, validateAdminRole } = require('../utils/auth');
 const { ASSIGNMENT_STATUS, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
 
@@ -45,6 +45,22 @@ exports.handler = async (event) => {
       };
     }
     
+    // Check for duplicate assignment using task-index GSI
+    const existingAssignments = await getTaskAssignments(taskId);
+    const isDuplicate = existingAssignments.some(
+      assignment => assignment.assigneeId === assigneeId
+    );
+    
+    if (isDuplicate) {
+      return {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ 
+          error: 'User is already assigned to this task'
+        })
+      };
+    }
+    
     // Create assignment
     const assignmentId = `${taskId}#${assigneeId}`;
     const now = Date.now();
@@ -59,7 +75,7 @@ exports.handler = async (event) => {
       status: ASSIGNMENT_STATUS.ASSIGNED
     };
     
-    // Check if assignment already exists
+    // Double-check using direct key lookup (backup check)
     const existingAssignment = await getItem(ASSIGNMENTS_TABLE, { assignmentId });
     
     if (existingAssignment) {

@@ -1,5 +1,5 @@
 const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
-const { getUserEmail, getUsersByRole } = require('./cognito');
+const { getUserEmail, getUsersByRole, getAdminEmails } = require('./cognito');
 
 const sesClient = new SESClient({ region: process.env.AWS_REGION }); // AWS Lambda automatically provides this
 const SENDER_EMAIL = process.env.SENDER_EMAIL || 'joel.ackah@amalitech.com';
@@ -88,28 +88,27 @@ async function sendTaskStatusUpdateEmail(assigneeIds, task, oldStatus, newStatus
       })
     );
 
-    // Get all admin users
-    const adminUsers = await getUsersByRole('admin');
-    const adminEmails = adminUsers.map(user => user.email);
+    // Get all admin emails using dedicated function
+    const adminEmails = await getAdminEmails();
 
-    // Combine and deduplicate emails
-    const allEmails = [...new Set([
+    // Combine and deduplicate emails, filter out nulls
+    const validEmails = [...new Set([
       ...assigneeEmails.filter(email => email !== null),
-      ...adminEmails
+      ...adminEmails.filter(email => email !== null)
     ])];
 
-    if (allEmails.length === 0) {
+    if (validEmails.length === 0) {
       console.error('No valid email addresses found for status update notification');
       return;
     }
 
-    console.log(`Sending status update to ${allEmails.length} recipients:`, allEmails);
+    console.log(`Sending status update to ${validEmails.length} recipients:`, validEmails);
 
     // Send email to all recipients
     const params = {
       Source: SENDER_EMAIL,
       Destination: {
-        ToAddresses: allEmails
+        ToAddresses: validEmails
       },
       Message: {
         Subject: {
@@ -142,7 +141,7 @@ async function sendTaskStatusUpdateEmail(assigneeIds, task, oldStatus, newStatus
     
     const command = new SendEmailCommand(params);
     await sesClient.send(command);
-    console.log(`Status update email sent successfully to ${allEmails.length} recipients`);
+    console.log(`Status update email sent successfully to ${validEmails.length} recipients`);
 
   } catch (error) {
     console.error('Error sending task status update email:', error);

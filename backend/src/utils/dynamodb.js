@@ -92,11 +92,44 @@ async function scanItems(tableName) {
   return response.Items || [];
 }
 
+/**
+ * Get all assignments for a specific task
+ * @param {string} taskId - The task ID
+ * @returns {Promise<Array>} Array of assignment objects
+ */
+async function getTaskAssignments(taskId) {
+  try {
+    const ASSIGNMENTS_TABLE_NAME = process.env.ASSIGNMENTS_TABLE;
+    
+    if (!ASSIGNMENTS_TABLE_NAME) {
+      console.error('ASSIGNMENTS_TABLE environment variable not set');
+      return [];
+    }
+
+    const command = new QueryCommand({
+      TableName: ASSIGNMENTS_TABLE_NAME,
+      IndexName: 'task-index',
+      KeyConditionExpression: 'taskId = :taskId',
+      ExpressionAttributeValues: {
+        ':taskId': taskId
+      }
+    });
+
+    const response = await docClient.send(command);
+    return response.Items || [];
+
+  } catch (error) {
+    console.error('Error querying task assignments:', error);
+    return [];
+  }
+}
+
 module.exports = {
   putItem,
   getItem,
   updateItem,
   deleteItem,
   queryItems,
-  scanItems
+  scanItems,
+  getTaskAssignments
 };
