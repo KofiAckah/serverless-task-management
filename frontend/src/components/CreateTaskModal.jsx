@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { taskService } from '../services/taskService';
-import { X, Plus, Calendar, Flag, FileText } from 'lucide-react';
+import { userService } from '../services/userService';
+import { X, Plus, Calendar, Flag, FileText, Users } from 'lucide-react';
 import './CreateTaskModal.css';
 
 const CreateTaskModal = ({ onClose, onTaskCreated }) => {
@@ -12,12 +13,31 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    const result = await userService.getUsers();
+    if (result.success) {
+      setUsers(result.data.users || []);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleUserSelection = (e) => {
+    const options = Array.from(e.target.selectedOptions);
+    const selected = options.map(option => option.value);
+    setSelectedUsers(selected);
   };
 
   const handleSubmit = async (e) => {
@@ -35,7 +55,8 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
       title: formData.title.trim(),
       description: formData.description.trim() || '',
       priority: formData.priority,
-      status: 'OPEN'
+      status: 'OPEN',
+      assignedTo: selectedUsers
     };
 
     if (formData.dueDate) {
@@ -102,6 +123,30 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
                 onChange={handleChange}
                 disabled={loading}
               />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">
+                <Users size={16} />
+                Assign To (optional)
+              </label>
+              <select
+                multiple
+                className="form-input"
+                style={{ minHeight: '100px' }}
+                value={selectedUsers}
+                onChange={handleUserSelection}
+                disabled={loading}
+              >
+                {users.map(user => (
+                  <option key={user.userId} value={user.userId}>
+                    {user.name} ({user.email})
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem' }}>
+                Hold Ctrl (Cmd on Mac) to select multiple users
+              </small>
             </div>
 
             <div className="form-row">

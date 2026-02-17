@@ -20,13 +20,13 @@ exports.handler = async (event) => {
   try {
     // Parse request body
     const body = JSON.parse(event.body || '{}');
-    const { email, password, role = 'member' } = body;
+    const { email, password, role = 'member', name } = body;
 
     // Validate required fields
-    if (!email || !password) {
+    if (!email || !password || !name) {
       return createErrorResponse(
         HTTP_STATUS.BAD_REQUEST,
-        'Email and password are required'
+        'Email, password, and name are required'
       );
     }
 
@@ -67,6 +67,10 @@ exports.handler = async (event) => {
         {
           Name: 'email',
           Value: email
+        },
+        {
+          Name: 'name',
+          Value: name
         },
         {
           Name: 'custom:role',

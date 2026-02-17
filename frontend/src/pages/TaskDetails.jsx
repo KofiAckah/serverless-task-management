@@ -35,7 +35,7 @@ const TaskDetails = () => {
     setLoading(true);
     const result = await taskService.getTasks();
     if (result.success) {
-      const foundTask = result.data.tasks.find(t => t.id === id);
+      const foundTask = result.data.tasks.find(t => t.taskId === id);
       if (foundTask) {
         setTask(foundTask);
         setEditedTask(foundTask);
@@ -276,8 +276,16 @@ const TaskDetails = () => {
             <div className="meta-item">
               <User size={16} />
               <span className="meta-label">Created by:</span>
-              <span>{task.createdBy || 'Unknown'}</span>
+              <span>{task.createdByName || task.createdByEmail || 'Unknown'}</span>
             </div>
+
+            {task.closedByName && (
+              <div className="meta-item">
+                <User size={16} />
+                <span className="meta-label">Closed by:</span>
+                <span>{task.closedByName}</span>
+              </div>
+            )}
           </div>
 
           {/* Description */}

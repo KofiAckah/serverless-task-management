@@ -1,9 +1,10 @@
 const { v4: uuidv4 } = require('uuid');
 const { putItem } = require('../utils/dynamodb');
 const { getUserFromEvent, validateAdminRole } = require('../utils/auth');
-const { TASK_STATUS, TASK_PRIORITY, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
+const { TASK_STATUS, TASK_PRIORITY, ASSIGNMENT_STATUS, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
 
 const TASKS_TABLE = process.env.TASKS_TABLE;
+const ASSIGNMENTS_TABLE = process.env.ASSIGNMENTS_TABLE;
 
 /**
  * Create a new task (Admin only)
@@ -21,7 +22,7 @@ exports.handler = async (event) => {
     
     // Parse request body
     const body = JSON.parse(event.body);
-    const { title, description, priority, dueDate } = body;
+    const { title, description, priority, dueDate, assignedTo } = body;
     
     // Validate required fields
     if (!title) {
@@ -29,6 +30,15 @@ exports.handler = async (event) => {
         statusCode: HTTP_STATUS.BAD_REQUEST,
         headers: CORS_HEADERS,
         body: JSON.stringify({ error: 'Title is required' })
+      };
+    }
+    
+    // Validate assignedTo if provided
+    if (assignedTo && !Array.isArray(assignedTo)) {
+      return {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ error: 'assignedTo must be an array' })
       };
     }
     
@@ -44,6 +54,7 @@ exports.handler = async (event) => {
       priority: priority || TASK_PRIORITY.MEDIUM,
       createdBy: user.userId,
       createdByEmail: user.email,
+      createdByName: user.name,
       createdAt: now,
       updatedAt: now
     };
@@ -58,12 +69,35 @@ exports.handler = async (event) => {
     
     console.log('Task created successfully:', taskId);
     
+    // Create assignments if assignedTo array is provided
+    const assignments = [];
+    if (assignedTo && assignedTo.length > 0) {
+      for (const assigneeId of assignedTo) {
+        const assignmentId = `${taskId}#${assigneeId}`;
+        const assignment = {
+          assignmentId,
+          taskId,
+          assigneeId,
+          assignedBy: user.userId,
+          assignedByEmail: user.email,
+          assignedByName: user.name,
+          assignedAt: now,
+          status: ASSIGNMENT_STATUS.ASSIGNED
+        };
+        
+        await putItem(ASSIGNMENTS_TABLE, assignment);
+        assignments.push(assignment);
+        console.log('Assignment created:', assignmentId);
+      }
+    }
+    
     return {
       statusCode: HTTP_STATUS.CREATED,
       headers: CORS_HEADERS,
       body: JSON.stringify({
         message: 'Task created successfully',
-        task
+        task,
+        assignments
       })
     };
     

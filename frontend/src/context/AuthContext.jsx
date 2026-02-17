@@ -31,17 +31,32 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       const currentUser = await getCurrentUser();
-      const session = await fetchAuthSession();
+      const session = await fetchAuthSession({ forceRefresh: true });
       const token = session.tokens?.idToken?.toString();
       const groups = session.tokens?.idToken?.payload['cognito:groups'] || [];
       
+      // Debug logging to see what's in the token
+      console.log('🔍 Auth Check - Groups from token:', groups);
+      console.log('🔍 Auth Check - Full token payload:', session.tokens?.idToken?.payload);
+      
       setUser(currentUser);
       setIdToken(token);
-      setUserRole(groups.includes('Admins') ? 'Admin' : 'Member');
+      
+      // Store token in sessionStorage for API calls
+      if (token) {
+        sessionStorage.setItem('idToken', token);
+      }
+      
+      // Check for 'Admin' (singular) - matches Cognito group name
+      const role = groups.includes('Admin') ? 'Admin' : 'Member';
+      console.log('🔍 Auth Check - Determined role:', role);
+      setUserRole(role);
     } catch (error) {
+      console.error('Auth check error:', error);
       setUser(null);
       setIdToken(null);
       setUserRole(null);
+      sessionStorage.removeItem('idToken');
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 /**
  * Post-Confirmation Lambda Trigger for Cognito
- * Automatically adds newly confirmed users to the "Members" group
- * Admins must be manually assigned via AWS CLI for security
+ * Automatically adds newly confirmed users to the "Member" group
+ * Admin users must be manually assigned via AWS CLI for security
  */
 
 const {
@@ -20,9 +20,9 @@ exports.handler = async (event) => {
     const userPoolId = event.userPoolId;
     const username = event.userName;
     
-    // Add user to Members group by default
+    // Add user to Member group by default (singular - matches Cognito group name)
     const params = {
-      GroupName: 'Members',
+      GroupName: 'Member',
       UserPoolId: userPoolId,
       Username: username,
     };
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
     const command = new AdminAddUserToGroupCommand(params);
     await cognitoClient.send(command);
     
-    console.log(`Successfully added user ${username} to Members group`);
+    console.log(`Successfully added user ${username} to Member group`);
     
     return event;
   } catch (error) {

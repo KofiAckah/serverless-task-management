@@ -50,6 +50,7 @@ function getUserFromEvent(event) {
   return {
     userId: claims.sub,
     email: claims.email,
+    name: claims.name || claims.email, // Use email as fallback if name not set
     groups: groups,
     role: userRole,
     customRole: customRole // Keep original for reference

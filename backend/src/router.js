@@ -9,6 +9,7 @@ const getAssignedTasks = require('./handlers/getAssignedTasks');
 const updateTask = require('./handlers/updateTask');
 const assignTask = require('./handlers/assignTask');
 const closeTask = require('./handlers/closeTask');
+const getUsers = require('./handlers/getUsers');
 
 const { HTTP_STATUS, CORS_HEADERS } = require('./shared/constants');
 
@@ -35,6 +36,10 @@ exports.handler = async (event) => {
     
     if (method === 'GET' && path === '/tasks') {
       return await getTasks.handler(event);
+    }
+    
+    if (method === 'GET' && path === '/users') {
+      return await getUsers.handler(event);
     }
     
     if (method === 'GET' && path === '/tasks/assigned') {
@@ -64,6 +69,7 @@ exports.handler = async (event) => {
         availableRoutes: [
           'POST /tasks',
           'GET /tasks',
+          'GET /users',
           'GET /tasks/assigned',
           'PUT /tasks/{taskId}',
           'POST /tasks/{taskId}/assign',

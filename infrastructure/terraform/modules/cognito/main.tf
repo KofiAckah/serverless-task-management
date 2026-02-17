@@ -33,6 +33,18 @@ resource "aws_cognito_user_pool" "main" {
   }
 
   schema {
+    name                = "name"
+    attribute_data_type = "String"
+    required            = false
+    mutable             = true
+
+    string_attribute_constraints {
+      min_length = 1
+      max_length = 2048
+    }
+  }
+
+  schema {
     name                = "role"
     attribute_data_type = "String"
     mutable             = true

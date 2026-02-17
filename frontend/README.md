@@ -194,7 +194,7 @@ All API requests include JWT token in Authorization header.
 ### "Unauthorized" errors
 - Your session may have expired, try logging out and back in
 - Check Cognito User Pool configuration
-- Ensure user is in correct Cognito group (Admins/Members)
+- Ensure user is in correct Cognito group (Admin/Member)
 
 ### Email domain error
 - Only @amalitech.com and @amalitechtraining.org emails are allowed

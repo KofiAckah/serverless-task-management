@@ -12,8 +12,8 @@ This document outlines the enhancements made to Phase 4, including task details 
 
 #### Implementation Details:
 - **Pre-Signup Lambda** (`preSignup.js`): Validates email domain (only @amalitech.com and @amalitechtraining.org allowed)
-- **Post-Confirmation Lambda** (`postConfirmation.js`): NEW - Automatically adds confirmed users to "Members" group
-- **Cognito Groups**: "Admins" (precedence 1) and "Members" (precedence 2)
+- **Post-Confirmation Lambda** (`postConfirmation.js`): NEW - Automatically adds confirmed users to "Member" group
+- **Cognito Groups**: "Admin" (precedence 1) and "Member" (precedence 2)
 
 ### Making a User an Admin
 For security reasons, there is **NO admin signup option**. Users must be manually promoted to admin via AWS CLI.
@@ -23,7 +23,7 @@ For security reasons, there is **NO admin signup option**. Users must be manuall
 aws cognito-idp admin-add-user-to-group \
   --user-pool-id eu-west-1_j6w7VPIZj \
   --username <user-email@amalitech.com> \
-  --group-name Admins \
+  --group-name Admin \
   --region eu-west-1
 ```
 
@@ -32,7 +32,7 @@ aws cognito-idp admin-add-user-to-group \
 aws cognito-idp admin-add-user-to-group \
   --user-pool-id eu-west-1_j6w7VPIZj \
   --username john.doe@amalitech.com \
-  --group-name Admins \
+  --group-name Admin \
   --region eu-west-1
 ```
 
@@ -41,7 +41,7 @@ The AuthContext automatically detects the user's role from Cognito groups:
 
 ```javascript
 const groups = session.tokens?.idToken?.payload['cognito:groups'] || [];
-setUserRole(groups.includes('Admins') ? 'Admin' : 'Member');
+setUserRole(groups.includes('Admin') ? 'Admin' : 'Member');
 ```
 
 This provides:
@@ -229,7 +229,7 @@ npm run dev
    aws cognito-idp admin-add-user-to-group \
      --user-pool-id eu-west-1_j6w7VPIZj \
      --username <email> \
-     --group-name Admins \
+     --group-name Admin \
      --region eu-west-1
    ```
 

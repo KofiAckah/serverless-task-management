@@ -64,6 +64,7 @@ exports.handler = async (event) => {
       '#status = :status',
       '#closedAt = :closedAt',
       '#closedBy = :closedBy',
+      '#closedByName = :closedByName',
       '#updatedAt = :updatedAt'
     ];
     
@@ -71,6 +72,7 @@ exports.handler = async (event) => {
       '#status': 'status',
       '#closedAt': 'closedAt',
       '#closedBy': 'closedBy',
+      '#closedByName': 'closedByName',
       '#updatedAt': 'updatedAt'
     };
     
@@ -78,6 +80,7 @@ exports.handler = async (event) => {
       ':status': TASK_STATUS.CLOSED,
       ':closedAt': Date.now(),
       ':closedBy': user.userId,
+      ':closedByName': user.name,
       ':updatedAt': Date.now()
     };
     

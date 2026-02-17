@@ -28,7 +28,7 @@ const TaskCard = ({ task, onUpdate, isAdmin }) => {
   });
 
   const handleViewDetails = () => {
-    navigate(`/tasks/${task.id}`);
+    navigate(`/tasks/${task.taskId}`);
   };
 
   const getStatusBadge = (status) => {
@@ -193,10 +193,14 @@ const TaskCard = ({ task, onUpdate, isAdmin }) => {
             <Calendar size={14} />
             <span>{formatDate(task.dueDate)}</span>
           </div>
-          {task.assignedTo && (
+          <div className="meta-item">
+            <User size={14} />
+            <span>Created by: {task.createdByName || task.createdByEmail}</span>
+          </div>
+          {task.closedByName && (
             <div className="meta-item">
               <User size={14} />
-              <span>Assigned</span>
+              <span>Closed by: {task.closedByName}</span>
             </div>
           )}
         </div>
