@@ -50,10 +50,11 @@ resource "aws_cognito_user_pool" "main" {
 
   # Lambda Triggers
   dynamic "lambda_config" {
-    for_each = var.pre_signup_lambda_arn != null ? [1] : []
+    for_each = var.pre_signup_lambda_arn != null || var.post_confirmation_lambda_arn != null ? [1] : []
 
     content {
-      pre_sign_up = var.pre_signup_lambda_arn
+      pre_sign_up       = var.pre_signup_lambda_arn
+      post_confirmation = var.post_confirmation_lambda_arn
     }
   }
 

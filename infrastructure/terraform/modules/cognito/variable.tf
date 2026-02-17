@@ -19,6 +19,12 @@ variable "pre_signup_lambda_arn" {
   default     = null
 }
 
+variable "post_confirmation_lambda_arn" {
+  description = "ARN of the post-confirmation Lambda function"
+  type        = string
+  default     = null
+}
+
 variable "ses_email_identity_arn" {
   description = "ARN of the SES email identity for sending Cognito emails"
   type        = string

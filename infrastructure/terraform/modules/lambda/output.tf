@@ -19,6 +19,27 @@ output "pre_signup_role_arn" {
   value       = aws_iam_role.pre_signup.arn
 }
 
+# Post-Confirmation Lambda Outputs
+output "post_confirmation_function_name" {
+  description = "Name of the post-confirmation Lambda function"
+  value       = aws_lambda_function.post_confirmation.function_name
+}
+
+output "post_confirmation_function_arn" {
+  description = "ARN of the post-confirmation Lambda function"
+  value       = aws_lambda_function.post_confirmation.arn
+}
+
+output "post_confirmation_invoke_arn" {
+  description = "Invoke ARN of the post-confirmation Lambda function"
+  value       = aws_lambda_function.post_confirmation.invoke_arn
+}
+
+output "post_confirmation_role_arn" {
+  description = "ARN of the post-confirmation Lambda IAM role"
+  value       = aws_iam_role.post_confirmation.arn
+}
+
 # Tasks Lambda Outputs
 output "tasks_function_name" {
   description = "Name of the tasks Lambda function"

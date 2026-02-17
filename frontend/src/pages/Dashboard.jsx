@@ -31,7 +31,7 @@ const Dashboard = () => {
     // Store token in sessionStorage for API client
     const storeToken = async () => {
       try {
-        const { fetchAuthSession } = await import('@aws-amplify/auth');
+        const { fetchAuthSession } = await import('aws-amplify/auth');
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
         if (token) {

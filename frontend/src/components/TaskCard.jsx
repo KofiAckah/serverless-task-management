@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { taskService } from '../services/taskService';
 import { 
   Calendar, 
@@ -9,11 +10,13 @@ import {
   Trash2,
   Play,
   User,
-  MoreVertical
+  MoreVertical,
+  Eye
 } from 'lucide-react';
 import './TaskCard.css';
 
 const TaskCard = ({ task, onUpdate, isAdmin }) => {
+  const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -23,6 +26,10 @@ const TaskCard = ({ task, onUpdate, isAdmin }) => {
     priority: task.priority,
     status: task.status
   });
+
+  const handleViewDetails = () => {
+    navigate(`/tasks/${task.id}`);
+  };
 
   const getStatusBadge = (status) => {
     const badges = {
@@ -193,6 +200,10 @@ const TaskCard = ({ task, onUpdate, isAdmin }) => {
             </div>
           )}
         </div>
+        <button className="view-details-btn" onClick={handleViewDetails}>
+          <Eye size={16} />
+          View Details
+        </button>
       </div>
     </div>
   );

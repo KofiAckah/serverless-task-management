@@ -91,6 +91,113 @@ resource "aws_lambda_permission" "cognito_pre_signup" {
 }
 
 #=============================================================================
+# Post-Confirmation Lambda (Cognito Trigger)
+#=============================================================================
+
+# IAM Role for Post-Confirmation Lambda
+resource "aws_iam_role" "post_confirmation" {
+  name = "${var.project_name}-${var.environment}-post-confirmation-lambda-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = var.tags
+}
+
+# Attach basic Lambda execution policy
+resource "aws_iam_role_policy_attachment" "post_confirmation_basic" {
+  role       = aws_iam_role.post_confirmation.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Post-Confirmation Lambda Cognito Policy - add user to group
+resource "aws_iam_role_policy" "post_confirmation_cognito" {
+  name = "${var.project_name}-${var.environment}-post-confirmation-cognito"
+  role = aws_iam_role.post_confirmation.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cognito-idp:AdminAddUserToGroup"
+        ]
+        Resource = "arn:aws:cognito-idp:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:userpool/${var.cognito_user_pool_id}"
+      }
+    ]
+  })
+}
+
+# CloudWatch Log Group for Post-Confirmation
+resource "aws_cloudwatch_log_group" "post_confirmation" {
+  name              = "/aws/lambda/${var.project_name}-${var.environment}-post-confirmation"
+  retention_in_days = 7
+
+  tags = var.tags
+}
+
+# Archive backend code for post-confirmation Lambda
+data "archive_file" "post_confirmation" {
+  type        = "zip"
+  output_path = "${path.module}/../../.terraform/lambda/post-confirmation.zip"
+  source_dir  = "${path.module}/../../../../backend"
+  excludes = [
+    ".git",
+    ".gitignore",
+    "README.md",
+    "test-events",
+    "test-local.js",
+    "quick-start.sh",
+    "deploy.sh",
+    "*.md"
+  ]
+}
+
+# Post-Confirmation Lambda Function
+resource "aws_lambda_function" "post_confirmation" {
+  filename         = data.archive_file.post_confirmation.output_path
+  function_name    = "${var.project_name}-${var.environment}-post-confirmation"
+  role             = aws_iam_role.post_confirmation.arn
+  handler          = "src/handlers/postConfirmation.handler"
+  source_code_hash = data.archive_file.post_confirmation.output_base64sha256
+  runtime          = var.runtime
+  timeout          = 10
+  memory_size      = 128
+
+  environment {
+    variables = {
+      ENVIRONMENT = var.environment
+    }
+  }
+
+  tags = var.tags
+
+  depends_on = [
+    aws_cloudwatch_log_group.post_confirmation,
+    aws_iam_role_policy_attachment.post_confirmation_basic,
+    aws_iam_role_policy.post_confirmation_cognito
+  ]
+}
+
+# Lambda Permission for Cognito post-confirmation
+resource "aws_lambda_permission" "cognito_post_confirmation" {
+  statement_id  = "AllowCognitoInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.post_confirmation.function_name
+  principal     = "cognito-idp.amazonaws.com"
+  source_arn    = "arn:aws:cognito-idp:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:userpool/${var.cognito_user_pool_id}"
+}
+
+#=============================================================================
 # Tasks Lambda (API Gateway Backend)
 #=============================================================================
 

@@ -5,11 +5,11 @@ module "cognito" {
   environment            = var.environment
   allowed_email_domains  = var.allowed_email_domains
   pre_signup_lambda_arn  = module.lambda.pre_signup_function_arn
+  # post_confirmation_lambda_arn is configured manually via AWS CLI to avoid circular dependency
+  # The Lambda is managed by Terraform, but the Cognito trigger is set outside of TF
   ses_email_identity_arn = module.ses.ses_identity_arn
   sender_email           = var.sender_email
   tags                   = var.tags
-
-  depends_on = [module.ses]
 }
 
 module "dynamodb" {
