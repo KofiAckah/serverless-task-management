@@ -1,6 +1,6 @@
 /**
  * Register Page
- * New user registration page
+ * New user registration with email confirmation
  */
 
 import { useState } from 'react';
@@ -12,7 +12,7 @@ import './Auth.css';
 
 export default function Register() {
   const navigate = useNavigate();
-  const { signup } = useAuth();
+  const { signup, confirmSignup } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -20,8 +20,10 @@ export default function Register() {
     confirmPassword: '',
     role: USER_ROLES.MEMBER,
   });
+  const [confirmationCode, setConfirmationCode] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
@@ -68,8 +70,31 @@ export default function Register() {
     }
 
     setLoading(true);
+    setErrors({});
+    
     const { confirmPassword, ...signupData } = formData;
     const result = await signup(signupData);
+    setLoading(false);
+
+    if (result.success) {
+      setNeedsConfirmation(true);
+    } else {
+      setErrors({ general: result.error });
+    }
+  };
+
+  const handleConfirmation = async (e) => {
+    e.preventDefault();
+    
+    if (!confirmationCode) {
+      setErrors({ confirmation: 'Confirmation code is required' });
+      return;
+    }
+
+    setLoading(true);
+    setErrors({});
+    
+    const result = await confirmSignup(formData.email, confirmationCode);
     setLoading(false);
 
     if (result.success) {
@@ -78,16 +103,17 @@ export default function Register() {
         navigate('/login');
       }, 2000);
     } else {
-      setErrors({ general: result.error });
+      setErrors({ confirmation: result.error });
     }
   };
 
+  // Success state
   if (success) {
     return (
       <div className="auth-container">
         <div className="auth-card">
           <div className="success-message">
-            <h2>Registration Successful!</h2>
+            <h2>✓ Account Confirmed!</h2>
             <p>Redirecting to login...</p>
           </div>
         </div>
@@ -95,6 +121,54 @@ export default function Register() {
     );
   }
 
+  // Confirmation code entry
+  if (needsConfirmation) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card">
+          <h1>Verify Your Email</h1>
+          <p className="auth-subtitle">
+            We've sent a verification code to <strong>{formData.email}</strong>
+          </p>
+
+          {errors.confirmation && (
+            <div className="error-message">{errors.confirmation}</div>
+          )}
+
+          <form onSubmit={handleConfirmation}>
+            <div className="form-group">
+              <label htmlFor="code">Verification Code</label>
+              <input
+                type="text"
+                id="code"
+                value={confirmationCode}
+                onChange={(e) => setConfirmationCode(e.target.value)}
+                placeholder="123456"
+                className={errors.confirmation ? 'error' : ''}
+                autoFocus
+              />
+              {errors.confirmation && (
+                <span className="error-text">{errors.confirmation}</span>
+              )}
+            </div>
+
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? 'Verifying...' : 'Verify Email'}
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Didn't receive the code? Check your spam folder or{' '}
+            <a href="#" onClick={(e) => { e.preventDefault(); setNeedsConfirmation(false); }}>
+              try again
+            </a>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Registration form
   return (
     <div className="auth-container">
       <div className="auth-card">
@@ -128,10 +202,13 @@ export default function Register() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
+              placeholder="you@amalitech.com"
               className={errors.email ? 'error' : ''}
             />
             {errors.email && <span className="error-text">{errors.email}</span>}
+            <small style={{ color: '#718096', fontSize: '12px' }}>
+              Use @amalitech.com or @amalitechtraining.org
+            </small>
           </div>
 
           <div className="form-group">

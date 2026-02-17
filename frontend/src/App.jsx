@@ -37,6 +37,23 @@ function PublicRoute({ children }) {
 }
 
 function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        fontSize: '18px',
+        color: '#718096'
+      }}>
+        Loading...
+      </div>
+    );
+  }
+
   return (
     <Routes>
       {/* Public Routes */}
@@ -73,9 +90,9 @@ function AppRoutes() {
         </ProtectedRoute>
       } />
 
-      {/* Default Route */}
-      <Route path="/" element={<Navigate to="/dashboard" />} />
-      <Route path="*" element={<Navigate to="/dashboard" />} />
+      {/* Default Route - redirect based on auth status */}
+      <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
+      <Route path="*" element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />} />
     </Routes>
   );
 }

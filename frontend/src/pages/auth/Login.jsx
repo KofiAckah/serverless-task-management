@@ -44,13 +44,22 @@ export default function Login() {
     }
 
     setLoading(true);
-    const result = await login(formData.email, formData.password);
-    setLoading(false);
+    setErrors({});
+    
+    try {
+      const result = await login(formData.email, formData.password);
 
-    if (result.success) {
-      navigate('/dashboard');
-    } else {
-      setErrors({ general: result.error });
+      if (result.success) {
+        console.log('Login successful, redirecting to dashboard');
+        navigate('/dashboard');
+      } else {
+        setErrors({ general: result.error || 'Login failed' });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrors({ general: 'An unexpected error occurred' });
+    } finally {
+      setLoading(false);
     }
   };
 
