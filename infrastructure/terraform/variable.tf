@@ -98,29 +98,3 @@ variable "stream_view_type" {
     error_message = "Invalid stream view type"
   }
 }
-
-# Amplify Variables
-variable "github_repository" {
-  description = "GitHub repository URL for Amplify hosting"
-  type        = string
-  default     = ""
-}
-
-variable "github_branch" {
-  description = "GitHub branch to deploy from Amplify"
-  type        = string
-  default     = "main"
-}
-
-variable "github_access_token" {
-  description = "GitHub personal access token for Amplify to access the repository"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
-
-variable "enable_amplify_auto_build" {
-  description = "Enable automatic builds in Amplify on code push"
-  type        = bool
-  default     = true
-}

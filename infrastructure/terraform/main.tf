@@ -94,25 +94,3 @@ module "api_gateway" {
 
   depends_on = [module.lambda, module.cognito]
 }
-
-module "amplify" {
-  source = "./modules/amplify"
-
-  app_name            = "${var.project_name}-${var.environment}-frontend"
-  repository          = var.github_repository
-  branch_name         = var.github_branch
-  github_access_token = var.github_access_token
-  enable_auto_build   = var.enable_amplify_auto_build
-  framework           = "React"
-
-  environment_variables = {
-    VITE_API_BASE_URL          = module.api_gateway.api_endpoint
-    VITE_COGNITO_USER_POOL_ID  = module.cognito.user_pool_id
-    VITE_COGNITO_CLIENT_ID     = module.cognito.client_id
-    VITE_COGNITO_REGION        = var.aws_region
-  }
-
-  tags = var.tags
-
-  depends_on = [module.api_gateway, module.cognito]
-}

@@ -63,19 +63,3 @@ output "api_endpoints" {
   description = "All API endpoints"
   value       = module.api_gateway.api_endpoints
 }
-
-# Amplify Outputs
-output "amplify_app_id" {
-  description = "ID of the Amplify app"
-  value       = try(module.amplify.app_id, "Not configured")
-}
-
-output "amplify_app_url" {
-  description = "URL of the deployed Amplify app"
-  value       = try(module.amplify.app_url, "Not configured")
-}
-
-output "amplify_default_domain" {
-  description = "Default domain of the Amplify app"
-  value       = try(module.amplify.default_domain, "Not configured")
-}
