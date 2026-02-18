@@ -48,6 +48,19 @@ terraform.rc
 # Ignore log files
 *.log
 
+# Ignore temporary scripts and documentation
+*-test.sh
+*-temp.sh
+cleanup-*.sh
+create-users*.sh
+*_COMPLETE.md
+*_FIX.md
+*_FIXES_*.md
+*_ISSUE.md
+*_READY.md
+*_REPORT.md
+PHASE_*.md
+
 # Ignore backup files
 *.backup
 *.bak

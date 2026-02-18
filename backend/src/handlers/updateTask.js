@@ -1,6 +1,6 @@
-const { getItem, updateItem } = require('../utils/dynamodb');
+const { getItem, updateItem, deleteItem, putItem, getTaskAssignments } = require('../utils/dynamodb');
 const { getUserFromEvent, isAdmin } = require('../utils/auth');
-const { TASK_STATUS, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
+const { TASK_STATUS, ASSIGNMENT_STATUS, HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
 
 const TASKS_TABLE = process.env.TASKS_TABLE;
 const ASSIGNMENTS_TABLE = process.env.ASSIGNMENTS_TABLE;
@@ -60,11 +60,11 @@ exports.handler = async (event) => {
     
     // Parse request body
     const body = JSON.parse(event.body);
-    const { title, description, status, priority, dueDate } = body;
+    const { title, description, status, priority, dueDate, assignedTo } = body;
     
     // Members can only update status
     if (!userIsAdmin) {
-      if (title !== undefined || description !== undefined || priority !== undefined || dueDate !== undefined) {
+      if (title !== undefined || description !== undefined || priority !== undefined || dueDate !== undefined || assignedTo !== undefined) {
         return {
           statusCode: HTTP_STATUS.FORBIDDEN,
           headers: CORS_HEADERS,
@@ -83,6 +83,15 @@ exports.handler = async (event) => {
           })
         };
       }
+    }
+    
+    // Validate assignedTo if provided
+    if (assignedTo !== undefined && !Array.isArray(assignedTo)) {
+      return {
+        statusCode: HTTP_STATUS.BAD_REQUEST,
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ error: 'assignedTo must be an array' })
+      };
     }
     
     // Build update expression
@@ -146,12 +155,54 @@ exports.handler = async (event) => {
     
     console.log('Task updated successfully:', taskId);
     
+    // Handle assignment updates (admin only)
+    let assignmentChanges = { added: [], removed: [] };
+    if (userIsAdmin && assignedTo !== undefined) {
+      const now = Date.now();
+      
+      // Get current assignments
+      const currentAssignments = await getTaskAssignments(taskId);
+      const currentAssigneeIds = currentAssignments.map(a => a.assigneeId);
+      
+      // Determine which assignments to add and remove
+      const toAdd = assignedTo.filter(id => !currentAssigneeIds.includes(id));
+      const toRemove = currentAssigneeIds.filter(id => !assignedTo.includes(id));
+      
+      // Remove unassigned users
+      for (const assigneeId of toRemove) {
+        const assignmentId = `${taskId}#${assigneeId}`;
+        await deleteItem(ASSIGNMENTS_TABLE, { assignmentId });
+        assignmentChanges.removed.push(assigneeId);
+        console.log('Assignment removed:', assignmentId);
+      }
+      
+      // Add new assignments
+      for (const assigneeId of toAdd) {
+        const assignmentId = `${taskId}#${assigneeId}`;
+        const assignment = {
+          assignmentId,
+          taskId,
+          assigneeId,
+          assignedBy: user.userId,
+          assignedByEmail: user.email,
+          assignedByName: user.name,
+          assignedAt: now,
+          status: ASSIGNMENT_STATUS.ASSIGNED
+        };
+        
+        await putItem(ASSIGNMENTS_TABLE, assignment);
+        assignmentChanges.added.push(assigneeId);
+        console.log('Assignment created:', assignmentId);
+      }
+    }
+    
     return {
       statusCode: HTTP_STATUS.OK,
       headers: CORS_HEADERS,
       body: JSON.stringify({
         message: 'Task updated successfully',
-        task: updatedTask
+        task: updatedTask,
+        assignmentChanges: assignmentChanges.added.length || assignmentChanges.removed.length ? assignmentChanges : undefined
       })
     };
     

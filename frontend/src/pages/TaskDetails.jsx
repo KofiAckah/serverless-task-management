@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { taskService } from '../services/taskService';
+import { userService } from '../services/userService';
 import {
   ArrowLeft,
   Calendar,
@@ -26,10 +27,16 @@ const TaskDetails = () => {
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editedTask, setEditedTask] = useState({});
+  const [users, setUsers] = useState([]);
+  const [assignments, setAssignments] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   useEffect(() => {
     loadTask();
-  }, [id]);
+    if (isAdmin) {
+      loadUsers();
+    }
+  }, [id, isAdmin]);
 
   const loadTask = async () => {
     setLoading(true);
@@ -44,6 +51,13 @@ const TaskDetails = () => {
       }
     }
     setLoading(false);
+  };
+
+  const loadUsers = async () => {
+    const result = await userService.getUsers();
+    if (result.success) {
+      setUsers(result.data.users || []);
+    }
   };
 
   const handleUpdateStatus = async (newStatus) => {
@@ -67,14 +81,27 @@ const TaskDetails = () => {
       status: editedTask.status
     };
 
+    // Include assignments if admin
+    if (isAdmin) {
+      updates.assignedTo = selectedUsers;
+    }
+
     const result = await taskService.updateTask(id, updates);
     if (result.success) {
       setTask(editedTask);
       setEditMode(false);
+      // Reset selected users after save
+      setSelectedUsers([]);
     } else {
       alert(result.message || 'Failed to save changes');
     }
     setSaving(false);
+  };
+
+  const handleUserSelection = (e) => {
+    const options = Array.from(e.target.selectedOptions);
+    const selected = options.map(option => option.value);
+    setSelectedUsers(selected);
   };
 
   const handleCancelEdit = () => {
@@ -304,8 +331,35 @@ const TaskDetails = () => {
             )}
           </div>
 
+          {/* Assignment Management - Admin in Edit Mode */}
+          {editMode && isAdmin && (
+            <div className="task-section">
+              <h2 className="section-title">
+                <Users size={18} />
+                Assign To Users
+              </h2>
+              <select
+                multiple
+                className="form-input"
+                style={{ minHeight: '150px', width: '100%' }}
+                value={selectedUsers}
+                onChange={handleUserSelection}
+                disabled={saving}
+              >
+                {users.map(user => (
+                  <option key={user.userId} value={user.userId}>
+                    {user.name} ({user.email}) - {user.role}
+                  </option>
+                ))}
+              </select>
+              <small style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', marginTop: '0.5rem', display: 'block' }}>
+                Hold Ctrl (Cmd on Mac) to select multiple users. Leave empty to unassign all users.
+              </small>
+            </div>
+          )}
+
           {/* Assignees */}
-          {task.assignedTo && task.assignedTo.length > 0 && (
+          {!editMode && task.assignedTo && task.assignedTo.length > 0 && (
             <div className="task-section">
               <h2 className="section-title">
                 <Users size={18} />
