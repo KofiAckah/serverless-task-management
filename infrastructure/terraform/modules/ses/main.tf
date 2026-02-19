@@ -1,24 +1,9 @@
 # Get current AWS region
 data "aws_region" "current" {}
 
-# Validate sender email domain
-locals {
-  # Extract domain from email
-  sender_domain = length(split("@", var.sender_email)) > 1 ? split("@", var.sender_email)[1] : ""
-  # Check if sender domain is in allowed list
-  is_valid_domain = contains(var.allowed_email_domains, local.sender_domain)
-}
-
-# SES Email Identity Verification
+# SES Email Identity Verification (NO RESTRICTIONS)
 resource "aws_ses_email_identity" "sender" {
   email = var.sender_email
-
-  lifecycle {
-    precondition {
-      condition     = local.is_valid_domain
-      error_message = "Sender email domain '${local.sender_domain}' is not in allowed domains: ${join(", ", var.allowed_email_domains)}"
-    }
-  }
 }
 
 # SES Email Identity Verification (optional: domain-based)

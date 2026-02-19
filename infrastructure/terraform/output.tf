@@ -48,6 +48,17 @@ output "ses_sender_email" {
   value       = module.ses.verified_email
 }
 
+# SNS Outputs
+output "sns_topic_arn" {
+  description = "ARN of the SNS topic for notifications"
+  value       = module.sns.topic_arn
+}
+
+output "sns_topic_name" {
+  description = "Name of the SNS topic"
+  value       = module.sns.topic_name
+}
+
 # API Gateway Outputs
 output "api_gateway_url" {
   description = "Base URL of the API Gateway"

@@ -366,6 +366,12 @@ resource "aws_iam_role_policy_attachment" "notifications_ses" {
   policy_arn = var.ses_policy_arn
 }
 
+# Attach SNS publish policy
+resource "aws_iam_role_policy_attachment" "notifications_sns" {
+  role       = aws_iam_role.notifications.name
+  policy_arn = var.sns_publish_policy_arn
+}
+
 # Notifications Lambda Cognito Policy
 resource "aws_iam_role_policy" "notifications_cognito" {
   name = "${var.project_name}-${var.environment}-notifications-cognito"
@@ -463,6 +469,7 @@ resource "aws_lambda_function" "notifications" {
   environment {
     variables = {
       SENDER_EMAIL                        = var.sender_email
+      SNS_TOPIC_ARN                       = var.sns_topic_arn
       TASKS_TABLE                         = var.tasks_table_name
       ASSIGNMENTS_TABLE                   = var.assignments_table_name
       ENVIRONMENT                         = var.environment
@@ -477,6 +484,7 @@ resource "aws_lambda_function" "notifications" {
     aws_cloudwatch_log_group.notifications,
     aws_iam_role_policy_attachment.notifications_basic,
     aws_iam_role_policy_attachment.notifications_ses,
+    aws_iam_role_policy_attachment.notifications_sns,
     aws_iam_role_policy.notifications_streams,
     aws_iam_role_policy.notifications_cognito
   ]

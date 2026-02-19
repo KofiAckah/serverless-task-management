@@ -71,6 +71,16 @@ variable "ses_policy_arn" {
   type        = string
 }
 
+variable "sns_topic_arn" {
+  description = "ARN of the SNS topic for notifications"
+  type        = string
+}
+
+variable "sns_publish_policy_arn" {
+  description = "ARN of the SNS publish policy"
+  type        = string
+}
+
 variable "cognito_user_pool_id" {
   description = "Cognito User Pool ID"
   type        = string

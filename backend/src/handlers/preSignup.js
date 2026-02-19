@@ -27,9 +27,9 @@ exports.handler = async (event) => {
     
     console.log(`Email domain '${domain}' validated successfully`);
     
-    // Auto-confirm user and email (optional - based on requirements)
-    event.response.autoConfirmUser = true;
-    event.response.autoVerifyEmail = true;
+    // Don't auto-confirm - let Cognito send verification email
+    event.response.autoConfirmUser = false;
+    event.response.autoVerifyEmail = false;
     
     return event;
   } catch (error) {

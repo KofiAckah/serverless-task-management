@@ -2,13 +2,23 @@ resource "aws_cognito_user_pool" "main" {
   name = "${var.project_name}-${var.environment}-user-pool"
 
   username_attributes      = var.username_attributes
-  auto_verified_attributes = var.auto_verified_attributes
+  auto_verified_attributes = ["email"]
 
   # Email configuration - Use SES for sending emails
   email_configuration {
     email_sending_account = "DEVELOPER"
     source_arn            = var.ses_email_identity_arn
     from_email_address    = var.sender_email
+    reply_to_email_address = var.sender_email
+  }
+
+  # Verification message template
+  verification_message_template {
+    default_email_option  = "CONFIRM_WITH_CODE"
+    email_subject        = "Verify your Task Management account"
+    email_message        = "Welcome to Task Management System! Your verification code is {####}. Please enter this code to complete your registration."
+    email_subject_by_link = "Verify your Task Management account"
+    email_message_by_link = "Welcome to Task Management System! Please click the link below to verify your email address: {##Verify Email##}"
   }
 
   password_policy {

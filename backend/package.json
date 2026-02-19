@@ -14,6 +14,7 @@
     "@aws-sdk/client-dynamodb": "^3.550.0",
     "@aws-sdk/lib-dynamodb": "^3.550.0",
     "@aws-sdk/client-ses": "^3.550.0",
+    "@aws-sdk/client-sns": "^3.550.0",
     "@aws-sdk/util-dynamodb": "^3.550.0",
     "uuid": "^9.0.1",
     "jsonwebtoken": "^9.0.2",

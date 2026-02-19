@@ -2,7 +2,7 @@ const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 const { getUserEmail, getUsersByRole, getAdminEmails } = require('./cognito');
 
 const sesClient = new SESClient({ region: process.env.AWS_REGION }); // AWS Lambda automatically provides this
-const SENDER_EMAIL = process.env.SENDER_EMAIL || 'joel.ackah@amalitech.com';
+const SENDER_EMAIL = process.env.SENDER_EMAIL || 'kofiackah360@gmail.com';
 
 /**
  * Send task assignment notification email

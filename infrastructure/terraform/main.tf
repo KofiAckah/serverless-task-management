@@ -33,6 +33,14 @@ module "ses" {
   tags                  = var.tags
 }
 
+module "sns" {
+  source = "./modules/sns"
+
+  project_name = var.project_name
+  environment  = var.environment
+  tags         = var.tags
+}
+
 module "lambda" {
   source = "./modules/lambda"
 
@@ -55,6 +63,10 @@ module "lambda" {
 
   # SES configuration
   ses_policy_arn = module.ses.ses_send_email_policy_arn
+
+  # SNS configuration
+  sns_topic_arn        = module.sns.topic_arn
+  sns_publish_policy_arn = module.sns.sns_publish_policy_arn
 
   # Cognito configuration
   cognito_user_pool_id  = module.cognito.user_pool_id
