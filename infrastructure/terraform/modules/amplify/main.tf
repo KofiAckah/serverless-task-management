@@ -45,8 +45,8 @@ resource "aws_amplify_app" "frontend" {
     enable_auto_build = false
   }
 
-  # Platform
-  platform = "WEB_COMPUTE"
+  # Platform - WEB for static sites (Vite/React)
+  platform = "WEB"
 
   tags = var.tags
 }
