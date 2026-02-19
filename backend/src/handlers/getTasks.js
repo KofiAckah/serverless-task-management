@@ -1,9 +1,16 @@
-const { getItem, queryItems, scanItems } = require('../utils/dynamodb');
+const { getItem, queryItems, scanItems, getTaskAssignments } = require('../utils/dynamodb');
 const { getUserFromEvent, isAdmin } = require('../utils/auth');
 const { HTTP_STATUS, CORS_HEADERS } = require('../shared/constants');
+const { AdminGetUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
+const { CognitoIdentityProviderClient } = require('@aws-sdk/client-cognito-identity-provider');
 
 const TASKS_TABLE = process.env.TASKS_TABLE;
 const ASSIGNMENTS_TABLE = process.env.ASSIGNMENTS_TABLE;
+const COGNITO_USER_POOL_ID = process.env.COGNITO_USER_POOL_ID;
+
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: process.env.AWS_REGION
+});
 
 /**
  * Get tasks based on user role
@@ -84,6 +91,59 @@ exports.handler = async (event) => {
       
       const assignedTaskIds = userAssignments.map(a => a.taskId);
       tasks = tasks.filter(task => assignedTaskIds.includes(task.taskId));
+    }
+    
+    // Enrich tasks with assignment information
+    for (const task of tasks) {
+      try {
+        const assignments = await getTaskAssignments(task.taskId);
+        
+        if (assignments && assignments.length > 0) {
+          // Get assignee details from  Cognito
+          const assignees = [];
+          
+          for (const assignment of assignments) {
+            try {
+              const command = new AdminGetUserCommand({
+                UserPoolId: COGNITO_USER_POOL_ID,
+                Username: assignment.assigneeId
+              });
+              
+              const cognitoUser = await cognitoClient.send(command);
+              const email = cognitoUser.UserAttributes?.find(attr => attr.Name === 'email')?.Value;
+              const name = cognitoUser.UserAttributes?.find(attr => attr.Name === 'name')?.Value;
+              
+              assignees.push({
+                userId: assignment.assigneeId,
+                email: email,
+                name: name || email,
+                assignedAt: assignment.assignedAt,
+                assignedBy: assignment.assignedByName || assignment.assignedByEmail
+              });
+            } catch (error) {
+              console.error(`Error fetching user ${assignment.assigneeId}:`, error);
+              // Include partial info if Cognito fetch fails
+              assignees.push({
+                userId: assignment.assigneeId,
+                email: 'Unknown',
+                name: 'Unknown User',
+                assignedAt: assignment.assignedAt
+              });
+            }
+          }
+          
+          // Add assignees to task
+          task.assignees = assignees;
+          task.assignedTo = assignees.map(a => a.email); // For backwards compatibility
+        } else {
+          task.assignees = [];
+          task.assignedTo = [];
+        }
+      } catch (error) {
+        console.error(`Error fetching assignments for task ${task.taskId}:`, error);
+        task.assignees = [];
+        task.assignedTo = [];
+      }
     }
     
     // Sort by createdAt (newest first)

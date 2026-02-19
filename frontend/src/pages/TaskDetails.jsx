@@ -359,17 +359,20 @@ const TaskDetails = () => {
           )}
 
           {/* Assignees */}
-          {!editMode && task.assignedTo && task.assignedTo.length > 0 && (
+          {!editMode && task.assignees && task.assignees.length > 0 && (
             <div className="task-section">
               <h2 className="section-title">
                 <Users size={18} />
                 Assigned To
               </h2>
               <div className="assignees-list">
-                {task.assignedTo.map((email, index) => (
+                {task.assignees.map((assignee, index) => (
                   <div key={index} className="assignee-item">
                     <User size={16} />
-                    <span>{email}</span>
+                    <div className="assignee-info">
+                      <span className="assignee-name">{assignee.name}</span>
+                      <span className="assignee-email">{assignee.email}</span>
+                    </div>
                   </div>
                 ))}
               </div>
