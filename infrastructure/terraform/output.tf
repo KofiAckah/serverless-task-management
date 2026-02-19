@@ -74,3 +74,24 @@ output "api_endpoints" {
   description = "All API endpoints"
   value       = module.api_gateway.api_endpoints
 }
+
+# Amplify Outputs
+output "amplify_app_id" {
+  description = "Amplify App ID"
+  value       = module.amplify.app_id
+}
+
+output "amplify_app_url" {
+  description = "Amplify App URL"
+  value       = module.amplify.app_url
+}
+
+output "amplify_default_domain" {
+  description = "Amplify default domain"
+  value       = module.amplify.default_domain
+}
+
+output "amplify_branch_name" {
+  description = "Deployed Amplify branch"
+  value       = module.amplify.branch_name
+}

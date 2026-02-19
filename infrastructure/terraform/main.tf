@@ -106,3 +106,24 @@ module "api_gateway" {
 
   depends_on = [module.lambda, module.cognito]
 }
+
+module "amplify" {
+  source = "./modules/amplify"
+
+  project_name = var.project_name
+  environment  = var.environment
+  aws_region   = var.aws_region
+  tags         = var.tags
+
+  # GitHub repository
+  repository_url       = var.repository_url
+  branch_name          = var.branch_name
+  github_access_token  = var.github_access_token
+
+  # Frontend environment variables
+  api_gateway_url       = module.api_gateway.api_endpoint
+  cognito_user_pool_id  = module.cognito.user_pool_id
+  cognito_client_id     = module.cognito.client_id
+
+  depends_on = [module.api_gateway, module.cognito]
+}
