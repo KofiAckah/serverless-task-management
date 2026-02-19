@@ -231,7 +231,8 @@ resource "aws_iam_role_policy" "tasks_cognito" {
         Effect = "Allow"
         Action = [
           "cognito-idp:AdminGetUser",
-          "cognito-idp:ListUsers"
+          "cognito-idp:ListUsers",
+          "cognito-idp:ListUsersInGroup"
         ]
         Resource = var.cognito_user_pool_arn
       }
